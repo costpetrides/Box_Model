@@ -142,18 +142,18 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  const embedded = $('embedded-csv').textContent.trim();
  // One entry per published scenario. Future supplied CSVs receive a user-approved title and file path.
  const publishedScenarios = [
-  {id:'initial',title:'Αρχικό',filename:'TESTout1-Table 1.csv',url:null},
-  {id:'alo-012',title:'ALO 0.12',filename:'ALO 0.12-Table 1.csv',url:'./ALO%200.12-Table%201.csv'},
-  {id:'hv-0',title:'HV=0',filename:'HN 0-Table 1.csv',url:'./HN%200-Table%201.csv'},
-  {id:'lat-57',title:'lat 57',filename:'LAT 57-Table 1.csv',url:'./LAT%2057-Table%201.csv'},
-  {id:'ml-400m',title:'ML = 400m',filename:'MXconst400-Table 1.csv',url:'./MXconst400-Table%201.csv'},
-  {id:'half-nox',title:'half NOX',filename:'NOX %2-Table 1.csv',url:'./NOX%20%252-Table%201.csv'},
-  {id:'double-nox',title:'Double NOX',filename:'NOX x2-Table 1.csv',url:'./NOX%20x2-Table%201.csv'},
-  {id:'reactivity-propene',title:'Reactivity Propene',filename:'REACTIVITY PROPENE-Table 1.csv',url:'./REACTIVITY%20PROPENE-Table%201.csv'},
-  {id:'half-voc',title:'half VOC',filename:'VOC %2-Table 1.csv',url:'./VOC%20%252-Table%201.csv'},
-  {id:'doubled-voc',title:'DOUBLED VOC',filename:'VOC x2-Table 1.csv',url:'./VOC%20x2-Table%201.csv'},
-  {id:'reactivity-propane',title:'Reactivity propane',filename:'reactivity PROPANE-Table 1.csv',url:'./reactivity%20PROPANE-Table%201.csv'},
-  {id:'h2o',title:'H2O',filename:'H2O-Table 1.csv',url:'./H2O-Table%201.csv'}
+  {id:'initial',title:'Baseline',filename:'TESTout1-Table 1.csv',url:null},
+  {id:'alo-012',title:'ALO = 0.12',filename:'ALO 0.12-Table 1.csv',url:'./ALO%200.12-Table%201.csv'},
+  {id:'hv-0',title:'HV = 0',filename:'HN 0-Table 1.csv',url:'./HN%200-Table%201.csv'},
+  {id:'lat-57',title:'Latitude = 57°',filename:'LAT 57-Table 1.csv',url:'./LAT%2057-Table%201.csv'},
+  {id:'ml-400m',title:'ML = 400 m',filename:'MXconst400-Table 1.csv',url:'./MXconst400-Table%201.csv'},
+  {id:'half-nox',title:'NOₓ × 0.5',filename:'NOX %2-Table 1.csv',url:'./NOX%20%252-Table%201.csv'},
+  {id:'double-nox',title:'NOₓ × 2',filename:'NOX x2-Table 1.csv',url:'./NOX%20x2-Table%201.csv'},
+  {id:'reactivity-propene',title:'Propene Reactivity',filename:'REACTIVITY PROPENE-Table 1.csv',url:'./REACTIVITY%20PROPENE-Table%201.csv'},
+  {id:'half-voc',title:'VOC × 0.5',filename:'VOC %2-Table 1.csv',url:'./VOC%20%252-Table%201.csv'},
+  {id:'doubled-voc',title:'VOC × 2',filename:'VOC x2-Table 1.csv',url:'./VOC%20x2-Table%201.csv'},
+  {id:'reactivity-propane',title:'Propane Reactivity',filename:'reactivity PROPANE-Table 1.csv',url:'./reactivity%20PROPANE-Table%201.csv'},
+  {id:'h2o',title:'H₂O',filename:'H2O-Table 1.csv',url:'./H2O-Table%201.csv'}
  ];
  const coreChemicals=['O3','NO','NO2','OH','CO'];
  const scenarioCache=new Map([['initial',embedded]]);
