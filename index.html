@@ -112,7 +112,7 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
    try{await ensureScenarioCached(entry)}catch(e){console.warn('Scenario unavailable:',entry.title,e.message)}
   }));
  }
- let publishedId='initial',viewMode='published',localCSV=null,scenarioRequest=0;
+ let publishedId='initial',selectedScenarioIds=new Set(publishedScenarios.map(s=>s.id)),viewMode='published',localCSV=null,scenarioRequest=0;
  function paintMode(){
   document.body.classList.toggle('csv-mode',viewMode==='csv');
   document.body.classList.toggle('csv-loaded',viewMode==='csv'&&!!localCSV);
@@ -124,25 +124,21 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('view-label').textContent=viewMode==='csv'?'BOX MODEL / CSV EXPLORER':'BOX MODEL / PUBLISHED SCENARIOS';
   $('view-description').textContent=viewMode==='csv'?'Analyse your own CSV privately, separately from the published scenarios.':'Choose a published box-model scenario and explore its chemical evolution.';
  }
+ function activePublishedScenarios(){return publishedScenarios.filter(s=>selectedScenarioIds.has(s.id))}
  function fillScenarioSelector(){
-  const select=$('scenario-select');
-  select.replaceChildren(...publishedScenarios.map(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.title;return opt}));
-  select.value=publishedId;
+  $('scenario-list').innerHTML=publishedScenarios.map(s=>`<label class="scenario-choice"><input type="checkbox" data-scenario="${escapeHTML(s.id)}" ${selectedScenarioIds.has(s.id)?'checked':''}><span><strong>${escapeHTML(s.title)}</strong><small>${escapeHTML(s.filename)}</small></span></label>`).join('');
+  $('scenario-status').textContent=selectedScenarioIds.size>1?selectedScenarioIds.size+' scenarios together · fixed axes':'Select another scenario to compare.';
  }
  async function loadPublishedScenario(id,preserve=true){
-  const entry=publishedScenarios.find(s=>s.id===id);
-  if(!entry)throw Error('Unknown published scenario.');
+  const entries=activePublishedScenarios();
+  if(!entries.length)throw Error('Select at least one scenario.');
   const request=++scenarioRequest;
-  const csv=await ensureScenarioCached(entry);
+  await Promise.all(entries.map(e=>ensureScenarioCached(e)));
   if(request!==scenarioRequest)return;
-  const keep=preserve&&viewMode==='published'&&dataset!==null;
+  const primary=entries[0],keep=preserve&&viewMode==='published'&&dataset!==null;
   viewMode='published';
-  init(csv,entry.filename,keep);
-  publishedId=id;
-  $('scenario-select').value=id;
-  $('filename').textContent=entry.filename;
-  $('scenario-status').textContent='Published scenario · '+entry.title;
-  paintMode();
+  init(scenarioCache.get(primary.id),primary.filename,keep);
+  publishedId=primary.id;fillScenarioSelector();paintMode();
  }
  function showCSVExplorer(){
   ++scenarioRequest;
@@ -252,9 +248,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('range-end').max=dataset.data.length-1;
   $('range-start').value=start;$('range-end').value=end;
   document.querySelectorAll('[data-scale]').forEach(b=>b.classList.toggle('active',b.dataset.scale===mode));
-  $('formula-error').textContent='';
-  $('calculated-name').value='NOx (calculated)';
-  $('formula-input').value='[NO] + [NO2]';
   $('footer-note').textContent=(clockMode?'Time interpreted as minutes since midnight':'Time shown in CSV units')+' · Concentration units not specified in CSV';
   renderAll();
  }
@@ -447,13 +440,17 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  $('legend').addEventListener('click',e=>{const x=e.target.closest('[data-remove]');if(x){selected.delete(x.dataset.remove);renderAll()}});
  document.querySelectorAll('[data-scale]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.scale;document.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active',x===b));renderPlotMeta();renderChart()}));
  $('range-start').addEventListener('input',e=>onRange('start',e.target.value));$('range-end').addEventListener('input',e=>onRange('end',e.target.value));
- $('add-formula').addEventListener('click',addFormula);$('formula-input').addEventListener('keydown',e=>{if(e.key==='Enter')addFormula()});
- $('clear-formulas').addEventListener('click',()=>{derived.forEach(d=>selected.delete(d.name));derived=[];renderAll();toast('Calculated series removed.')});
- const examples={nox:['NOx (calculated)','[NO] + [NO2]'],ratio:['O3 / NO2','[O3] / [NO2]'],residual:['NOx residual','[NOx] - ([NO] + [NO2])']};
- document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{let [name,expr]=examples[b.dataset.example];$('calculated-name').value=name;$('formula-input').value=expr;$('formula-error').textContent=''}));
- $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);$('export-stats').addEventListener('click',exportStats);
+  $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);$('export-stats').addEventListener('click',exportStats);
  $('csv-upload').addEventListener('change',async e=>{const file=e.target.files?.[0];if(file){try{await openLocalCSV(file)}catch(err){toast('CSV error: '+err.message)}e.target.value=''}});
- $('scenario-select').addEventListener('change',async e=>{const previous=publishedId;try{await loadPublishedScenario(e.target.value)}catch(err){$('scenario-select').value=previous;toast(err.message)}});
+ $('scenario-list').addEventListener('change',async e=>{
+  if(!e.target.matches('input[data-scenario]'))return;
+  const previous=new Set(selectedScenarioIds);
+  const ids=[...document.querySelectorAll('#scenario-list input[data-scenario]:checked')].map(x=>x.dataset.scenario);
+  if(!ids.length){e.target.checked=true;toast('Select at least one scenario.');return}
+  selectedScenarioIds=new Set(ids);
+  try{await loadPublishedScenario(ids[0],true)}
+  catch(err){selectedScenarioIds=previous;fillScenarioSelector();toast(err.message)}
+ });
  $('published-tab').addEventListener('click',async ()=>{try{await loadPublishedScenario(publishedId)}catch(err){toast(err.message)}});
  $('csv-tab').addEventListener('click',showCSVExplorer);
  $('reset-btn').addEventListener('click',async ()=>{try{
