@@ -237,13 +237,20 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   paintMode();
   toast('Local CSV loaded: '+file.name);
  }
+ const chemicalColours = Object.freeze({
+  O3:'#D43F4B',  // red
+  CO:'#E97928',  // orange
+  NO:'#2378C5',  // blue
+  NO2:'#8157C7', // purple
+  OH:'#C39B00'   // golden yellow: readable on white
+ });
  const palette = ['#2777b6','#e77b49','#139e92','#8e62c7','#de5e8b','#9b9928','#3a9acc','#be7152','#5472bd','#5d9c58','#c45d9b','#af8128'];
  let dataset=null, selected=new Set(), derived=[], mode='linear', start=0,end=0, search='', hoverIdx=-1, colorRegistry=new Map(), nextColour=0, clockMode=false, toastTimeout;
  const getSeries = name => derived.find(s=>s.name===name);
  // OH has a permanent, separate Y-axis. All other species use the left axis.
  const axisFor = name => name==='OH'?'right':'left';
  const nameList = () => [...dataset.names, ...derived.map(s=>s.name)];
- function colour(name){if(!colorRegistry.has(name))colorRegistry.set(name,palette[nextColour++%palette.length]);return colorRegistry.get(name)}
+ function colour(name){if(Object.prototype.hasOwnProperty.call(chemicalColours,name))return chemicalColours[name];if(!colorRegistry.has(name))colorRegistry.set(name,palette[nextColour++%palette.length]);return colorRegistry.get(name)}
  function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
  function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>el.classList.remove('show'),3500)}
  function parseDelimited(text){
