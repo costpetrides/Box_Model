@@ -207,7 +207,7 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function val(row,name){let d=getSeries(name);return d?d.values[row]:dataset.data[row][name]}
  function init(text,file,preserve=false){
   const old=preserve&&dataset?{
-   names:[...selected], formulas:derived.map(d=>({name:d.name,expr:d.expr})),
+   names:[...selected],
    mode,search,
    t0:dataset.data[start]?.[dataset.timeKey],
    t1:dataset.data[end]?.[dataset.timeKey]
@@ -221,15 +221,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   selected=new Set(old?old.names.filter(n=>available.includes(n)):coreChemicals.filter(n=>parsed.names.includes(n)));
   if(!old&&selected.size===0)selected=new Set(parsed.names.slice(0,Math.min(3,parsed.names.length)));
   if(old){
-   for(const formula of old.formulas){
-    try{
-     if(dataset.names.includes(formula.name))continue;
-     const rpn=expressionToRPN(formula.expr);
-     const values=dataset.data.map((_,i)=>evaluate(rpn,i));
-     if(values.some(Number.isFinite))derived.push({...formula,values});
-    }catch(e){console.warn('Formula not available in new scenario:',formula.name,e.message)}
-   }
-   for(const name of old.names)if(derived.some(d=>d.name===name))selected.add(name);
    function nearestTime(t,fallback){
     if(!Number.isFinite(t))return fallback;
     let best=fallback,dist=Infinity;
@@ -430,33 +421,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   const rect=$('chart-wrap').getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
   let left=(evt.clientX-rect.left)+15;if(left+w>rect.width-5)left=evt.clientX-rect.left-w-15;
   tip.style.left=Math.max(0,left)+'px';tip.style.top=Math.max(4,Math.min((evt.clientY-rect.top)-h/2,rect.height-h-4))+'px';
- }
- function expressionToRPN(expr){
-  let tokens=[],i=0;
-  while(i<expr.length){let c=expr[i];if(/\s/.test(c)){i++;continue}
-   if(c==='['){let j=expr.indexOf(']',i+1);if(j<0)throw Error('Missing ] after a variable name.');let n=expr.slice(i+1,j).trim();if(!dataset.names.includes(n))throw Error(`Unknown variable: ${n}`);tokens.push({t:'v',v:n});i=j+1;continue}
-   const num=expr.slice(i).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(num){tokens.push({t:'n',v:Number(num[0])});i+=num[0].length;continue}
-   if('+-*/^()'.includes(c)){tokens.push({t:c==='('? '(':c===')'?')':'o',v:c});i++;continue}
-   throw Error(`Unexpected character '${c}'. Use [Variable] for column names.`)
-  }
-  if(!tokens.length)throw Error('Enter an expression.');
-  const output=[],stack=[],precedence={'+':1,'-':1,'*':2,'/':2,'u+':5,'u-':5,'^':4},rightAssoc=new Set(['^','u+','u-']);let prev='start';
-  for(const tok of tokens){
-   if(tok.t==='n'||tok.t==='v'){if(prev==='value'||prev===')')throw Error('Missing an operator between values.');output.push(tok);prev='value';continue}
-   if(tok.t==='('){if(prev==='value'||prev===')')throw Error('Missing an operator before (.');stack.push(tok);prev='(';continue}
-   if(tok.t===')'){if(prev==='o'||prev==='('||prev==='start')throw Error('Invalid expression inside parentheses.');let found=false;while(stack.length){let op=stack.pop();if(op.t==='('){found=true;break}output.push(op)}if(!found)throw Error('Unmatched closing parenthesis.');prev=')';continue}
-   let op=tok.v;if(prev==='start'||prev==='o'||prev==='('){if(op!=='-'&&op!=='+')throw Error(`Unexpected operator ${op}.`);op='u'+op}
-   const q={t:'o',v:op};while(stack.length&&stack.at(-1).t==='o'){
-    const top=stack.at(-1).v;if((!rightAssoc.has(op)&&precedence[op]<=precedence[top])||(rightAssoc.has(op)&&precedence[op]<precedence[top]))output.push(stack.pop());else break;
-   }
-   stack.push(q);prev='o';
-  }
-  if(prev==='o'||prev==='(')throw Error('The expression is incomplete.');while(stack.length){let op=stack.pop();if(op.t==='(')throw Error('Unmatched opening parenthesis.');output.push(op)}
-  return output;
- }
- function evaluate(rpn,row){let st=[];for(const t of rpn){if(t.t==='n'){st.push(t.v);continue}if(t.t==='v'){st.push(dataset.data[row][t.v]);continue}if(t.v==='u-'||t.v==='u+'){if(!st.length)throw Error('Invalid formula.');st.push((t.v==='u-'?-1:1)*st.pop());continue}if(st.length<2)throw Error('Invalid formula.');let b=st.pop(),a=st.pop();let v=t.v==='+'?a+b:t.v==='-'?a-b:t.v==='*'?a*b:t.v==='/'?(b===0?NaN:a/b):Math.pow(a,b);st.push(Number.isFinite(v)?v:NaN)}if(st.length!==1)throw Error('Invalid formula.');return st[0]}
- function addFormula(){const name=$('calculated-name').value.trim(),expr=$('formula-input').value.trim();$('formula-error').textContent='';
-  try{if(!name)throw Error('Enter a name.');if(name.length>65)throw Error('Name is too long.');if(nameList().includes(name))throw Error('This series name is already in use.');const rpn=expressionToRPN(expr);const values=dataset.data.map((_,i)=>evaluate(rpn,i));if(!values.some(Number.isFinite))throw Error('No valid results (check division by zero or invalid powers).');derived.push({name,expr,values});selected.add(name);colour(name);renderAll();toast(`${name} was added to the graph.`)}catch(err){$('formula-error').textContent=err.message}
  }
  function onRange(which,v){const n=dataset.data.length;const idx=Math.max(0,Math.min(n-1,parseInt(v,10)||0));if(which==='start')start=Math.min(idx,end-1);else end=Math.max(idx,start+1);$('range-start').value=start;$('range-end').value=end;renderPlotMeta();renderChart();renderStats()}
  function saveText(text,filename,type){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
