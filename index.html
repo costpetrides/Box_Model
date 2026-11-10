@@ -322,10 +322,9 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  }
  function renderLegend(){
   const names=currentNames();
-  $('legend').innerHTML=names.map(name=>{
-   const ax=axisFor(name),title=name==='OH'?'OH always uses the right Y-axis':'Uses the left Y-axis';
-   return `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<span class="axis-switch ${ax}" title="${title}">${ax==='left'?'L':'R'}</span><button type="button" class="remove-series" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`;
-  }).join('')||'<span class="empty">Select one or more chemicals.</span>';
+  $('legend').innerHTML=names.map(name=>
+   `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<button type="button" class="remove-series" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`
+  ).join('')||'<span class="empty">Select one or more chemicals.</span>';
  }
  function tickStep(range, n=5){const rough=Math.max(range/n,1e-200),pow=Math.pow(10,Math.floor(Math.log10(rough))),r=rough/pow;return (r<=1?1:r<=2?2:r<=5?5:10)*pow}
  function computeAxisScale(series,allTimes=false){
