@@ -93,6 +93,14 @@ body.fullscreen-open{overflow:hidden}
 .fullscreen-hint{font-size:11px;color:#8391a2;text-align:center;margin-top:5px}
 @media(max-width:600px){.fullscreen-view{padding:12px 8px 10px}.fullscreen-heading strong{font-size:14px}.fullscreen-toolbar{gap:8px}.fullscreen-hint{font-size:9px}.fullscreen-legend{gap:6px 12px}}
 @media(max-width:760px){.range-wrap{gap:9px;flex-wrap:wrap}.range-wrap .range-name{flex:0 0 100%}.range-label{min-width:58px;padding:6px 8px}.range-sliders{min-width:105px}.plot-footer{gap:10px}}
+
+/* Upload-CSV-only layout: a taller chart and the original chemical pills below it. */
+body.csv-mode #chart-wrap .scenario-plot .plot-svg{height:clamp(500px,68vh,760px)}
+body.csv-mode #chart-wrap .scenario-mini-legend{display:none}
+.csv-legend-slot:empty{display:none}
+body.csv-mode .csv-legend-slot{display:flex;align-items:center;justify-content:center;margin:14px 0 1px;padding:10px 8px 0;border-top:1px solid #edf1f6;min-width:0}
+body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;margin:0;max-width:100%}
+@media(max-width:760px){body.csv-mode #chart-wrap .scenario-plot .plot-svg{height:clamp(350px,58vh,540px)}}
 </style>
 </head>
 <body>
@@ -121,6 +129,7 @@ body.fullscreen-open{overflow:hidden}
       <div class="panel-controls"><div class="segmented" role="group" aria-label="Chart vertical scale"><button data-scale="linear" class="active" type="button">Linear</button><button data-scale="log" type="button">Log</button><button data-scale="normalised" type="button">Normalised</button></div><button class="btn" id="export-svg" title="Download current graph as an SVG">↓ SVG</button><button class="btn" id="export-series" title="Download visible series as CSV">↓ CSV</button></div>
     </div>
     <div id="chart-wrap" class="scenario-grid" aria-label="Separate comparison charts for selected scenarios"></div>
+    <div id="csv-legend-slot" class="csv-legend-slot" aria-label="Selected chemicals for uploaded CSV"></div>
   </section>
 </main></div>
 <section id="fullscreen-view" class="fullscreen-view" role="dialog" aria-modal="true" aria-label="Expanded scenario graph" hidden>
@@ -207,6 +216,13 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('csv-tab').classList.toggle('primary',viewMode==='csv');
   $('published-tab').setAttribute('aria-pressed',String(viewMode==='published'));
   $('csv-tab').setAttribute('aria-pressed',String(viewMode==='csv'));
+  // Keep the same interactive chemical legend: below the chart for local CSV,
+  // above the charts for published scenarios. Moving preserves click handlers.
+  const legend=$('legend'),target=viewMode==='csv'?$('csv-legend-slot'):document.querySelector('.plot-toolbar');
+  if(legend.parentElement!==target){
+   if(viewMode==='csv')target.appendChild(legend);
+   else target.insertBefore(legend,target.querySelector('.time-range-panel'));
+  }
  }
  function activePublishedScenarios(){return publishedScenarios.filter(s=>selectedScenarioIds.has(s.id))}
  function fillScenarioSelector(){
