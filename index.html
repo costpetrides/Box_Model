@@ -67,6 +67,9 @@ body.fullscreen-open{overflow:hidden}
 .fullscreen-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .fullscreen-plot{position:relative;flex:1;min-height:0;width:100%;margin:10px 0 12px}
 .fullscreen-plot .plot-svg{display:block;width:100%!important;height:100%!important}
+/* Full-screen-only typography: larger tick labels and axis titles. */
+.fullscreen-plot .plot-svg text{font-size:13px}
+.fullscreen-plot .plot-svg .axis-title{font-size:12px}
 .fullscreen-legend{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 19px;padding:6px 0}
 .fullscreen-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#40536e;font-weight:700}
 .fullscreen-legend-item i{width:8px;height:8px;border-radius:50%;display:inline-block}
