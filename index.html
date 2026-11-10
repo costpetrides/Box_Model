@@ -316,19 +316,11 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
    }
   }
   const axes={};
+  // One common Y scale for the charts currently selected by the user.
+  // Keep full-day limits stable when the time-range sliders change.
   for(const axis of ['left','right']){
-   const current=series.filter(s=>s.axis===axis),reference=[];
-   if(viewMode==='published'){
-    for(const scenario of publishedScenarios){
-     const other=parsedScenarioCache.get(scenario.id);if(!other)continue;
-     for(const name of names.filter(n=>axisFor(n)===axis)){
-      if(!other.names.includes(name))continue;
-      const values=other.data.map(r=>r[name]),finite=values.filter(Number.isFinite),peak=Math.max(0,...finite.map(Math.abs));
-      reference.push({ys:values.map(v=>mode==='normalised'?(peak>0?v/peak:0):v)});
-     }
-    }
-   }
-   axes[axis]=computeAxisScale(reference.length?reference:current,reference.length>0);
+   const current=series.filter(s=>s.axis===axis);
+   axes[axis]=computeAxisScale(current,viewMode==='published');
   }
   return {series,axes,valid:axes.left.valid||axes.right.valid};
  }
