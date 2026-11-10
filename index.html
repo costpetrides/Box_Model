@@ -86,7 +86,6 @@ body.fullscreen-open{overflow:hidden}
     <div id="legend" class="legend" aria-label="Series legend and Y-axis assignments"></div>
     <div class="plot-footer"><div class="range-wrap"><span class="range-name">Time range</span><span class="range-label" id="range-start-text">—</span><div class="range-sliders"><input id="range-start" type="range" min="0" max="18" value="0" aria-label="Start time index"><input id="range-end" type="range" min="0" max="18" value="18" aria-label="End time index"></div><span class="range-label" id="range-end-text">—</span></div><div class="small-note" id="scale-note">Linear scale · original units</div></div>
   </section>
-  <footer class="footer"><span><span class="footmark">BOX MODEL</span> &nbsp; · &nbsp; Published scenarios · Interactive chemical data exploration</span><span id="footer-note">Time inferred as minutes since midnight · Concentrations in ppm</span></footer>
 </main></div>
 <section id="fullscreen-view" class="fullscreen-view" role="dialog" aria-modal="true" aria-label="Expanded scenario graph" hidden>
   <div class="fullscreen-toolbar">
@@ -288,7 +287,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('range-end').max=dataset.data.length-1;
   $('range-start').value=start;$('range-end').value=end;
   document.querySelectorAll('[data-scale]').forEach(b=>b.classList.toggle('active',b.dataset.scale===mode));
-  $('footer-note').textContent=(clockMode?'Time interpreted as minutes since midnight':'Time shown in CSV units')+(viewMode==='published'?' · Concentrations in ppm':' · Concentration units not specified in CSV');
   renderAll();
  }
  function renderAll(){renderSpecies();renderPlotMeta();renderLegend();renderChart()}
