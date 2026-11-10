@@ -27,13 +27,14 @@ body.csv-mode .data-section{display:none}
 @media(max-width:1190px){.layout{grid-template-columns:240px minmax(0,1fr)}.content{padding:30px 25px 40px}.sidebar{padding:25px 14px}.two-col{grid-template-columns:1fr}}
 @media(max-width:760px){.layout{display:block}.sidebar{border-right:0;border-bottom:1px solid var(--border);padding:17px;display:block}.brand{margin-bottom:18px}.sidebar .data-section{display:none}.side-species{margin-top:12px}.species-list{height:170px;min-height:0}.side-foot{display:none}.content{padding:23px 14px 32px}.topbar{display:block}.top-actions{justify-content:flex-start;margin-top:17px}.plot-panel,.calc-panel,.stats-panel{padding:18px 14px}.plot-svg{height:310px}.panel-controls{width:100%}.plot-footer{align-items:flex-start}.two-col{display:block}.calc-panel{margin-top:16px}.footer{display:block}.footer span{display:block;margin-top:5px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+.scenario-list{display:grid;gap:8px}.scenario-choice{display:flex;align-items:flex-start;gap:9px;padding:10px 9px;border:1px solid var(--border);border-radius:9px;background:#fff;cursor:pointer}.scenario-choice:has(input:checked){border-color:#b6d1e7;background:#f2f8fe}.scenario-choice input{accent-color:var(--accent);margin:1px 0;width:15px;height:15px}.scenario-choice strong{display:block;font-size:12px;color:var(--ink)}.scenario-choice small{display:block;margin-top:4px;font-size:10px;color:var(--muted);overflow-wrap:anywhere}.scenario-help{font-size:10px;color:var(--muted);line-height:1.6;margin-top:12px}.scenario-line-legend{display:flex;flex-wrap:wrap;gap:15px;margin:12px 8px 0;font-size:11px;color:#586d85}.scenario-line-item{display:inline-flex;align-items:center;gap:7px}.scenario-line-sample{width:27px;height:2px;background:#597088}.scenario-line-sample.dashed{background:repeating-linear-gradient(to right,#597088 0 6px,transparent 6px 11px)}.scenario-line-sample.dotted{background:repeating-linear-gradient(to right,#597088 0 2px,transparent 2px 7px)}
 </style>
 </head>
 <body>
 <div class="layout" id="app">
 <aside class="sidebar" aria-label="Dashboard controls">
   <div class="brand"><div class="brandmark">B<span style="display:inline;color:#7ac5df;font-size:21px">.</span></div><div><strong>BOX MODEL</strong><span>Chemical evolution explorer</span></div></div>
-  <section class="data-section"><div class="eyebrow">PUBLISHED SCENARIOS</div><div class="data-card"><label class="selector-label" for="scenario-select">Choose a scenario</label><select class="scenario-select" id="scenario-select" aria-label="Select published box model scenario"><option value="initial">Αρχικό</option></select><div class="filename" id="filename">TESTout1-Table 1.csv</div><div class="status" id="scenario-status">Published on this website</div></div></section>
+  <section class="data-section"><div class="eyebrow">PUBLISHED SCENARIOS</div><div class="data-card"><div class="selector-label">Compare scenarios</div><div id="scenario-list" class="scenario-list" role="group" aria-label="Choose scenarios to compare"></div><span id="filename" hidden></span><div id="scenario-status" class="scenario-help">Select one or more scenarios.</div></div></section>
   <section class="side-species"><div class="label-row"><span class="eyebrow" style="margin:0">CHEMICAL SPECIES</span><span class="count" id="species-count">0 selected</span></div>
   <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="species-search" type="search" placeholder="Search chemicals..." aria-label="Search chemical species"></div>
   <div class="species-actions"><button class="link-button" id="key-species">Select all five</button><button class="link-button" id="clear-species">Clear all</button></div>
@@ -51,19 +52,12 @@ body.csv-mode .data-section{display:none}
     <div class="panel-controls"><div class="segmented" role="group" aria-label="Chart vertical scale"><button data-scale="linear" class="active" type="button">Linear</button><button data-scale="log" type="button">Log</button><button data-scale="normalised" type="button">Normalised</button></div><button class="btn" id="export-svg" title="Download current graph as an SVG">↓ SVG</button><button class="btn" id="export-series" title="Download visible series as CSV">↓ CSV</button></div></div>
     <div id="chart-wrap" class="chart-wrap"><svg id="chart" class="plot-svg" role="img" aria-label="Selected chemical species over time"></svg><div id="tooltip" class="chart-tooltip" role="status"></div></div>
     <div class="legend-guide"><strong>OH always uses the right Y-axis.</strong> O₃, NO, NO₂ and CO use the left Y-axis. Published scenarios share identical axis scales for direct comparison.</div>
-    <div id="legend" class="legend" aria-label="Series legend and Y-axis assignments"></div>
+    <div id="legend" class="legend" aria-label="Series legend and Y-axis assignments"></div><div id="scenario-line-legend" class="scenario-line-legend"></div>
     <div class="plot-footer"><div class="range-wrap"><span class="range-name">Time range</span><span class="range-label" id="range-start-text">—</span><div class="range-sliders"><input id="range-start" type="range" min="0" max="18" value="0" aria-label="Start time index"><input id="range-end" type="range" min="0" max="18" value="18" aria-label="End time index"></div><span class="range-label" id="range-end-text">—</span></div><div class="small-note" id="scale-note">Linear scale · original units</div></div>
   </section>
-  <div class="two-col"><section class="panel stats-panel"><div class="panel-head"><div><h2>Calculated statistics</h2><div class="panel-desc">Computed from original values in the selected time window</div></div><button class="btn" id="export-stats">↓ Export</button></div>
-    <div class="stat-table-wrap"><table class="stats-table"><thead><tr><th>Species</th><th>Mean</th><th>Peak</th><th>Peak at</th><th>Δ</th></tr></thead><tbody id="stats-body"></tbody></table></div><div class="stat-caption">Mean = arithmetic average of recorded time steps. Δ = final − initial. Peaks and calculations use unscaled values, even when the plot is logarithmic or normalised.</div></section>
-    <section class="panel calc-panel"><div class="panel-head"><div><h2>Create a calculated series</h2><div class="panel-desc">Use model variables in brackets to build a new time series</div></div></div>
-      <label class="field-label" for="calculated-name">Series name</label><input class="textinput" id="calculated-name" value="NOx (calculated)" maxlength="65" autocomplete="off">
-      <label class="field-label" for="formula-input">Mathematical expression</label><input class="textinput formula" id="formula-input" value="[NO] + [NO2]" spellcheck="false" autocomplete="off">
-      <div class="formula-help">Use <strong>[O3]</strong>, <strong>[NO]</strong>, <strong>[NO2]</strong>, etc. Supports +, −, ×, ÷, powers (^), constants and parentheses. No external calculations.</div>
-      <div class="form-bottom"><button class="btn primary" id="add-formula">+ Add series to graph</button><span class="form-error" id="formula-error" role="alert"></span></div>
-      <div class="formula-examples"><button class="example" data-example="nox">NO + NO₂</button><button class="example" data-example="ratio">O₃ / NO₂</button><button class="example" data-example="residual">NOx residual</button></div>
-      <div class="calc-footer"><div class="help">Custom series are calculated locally from the current dataset.</div><button class="link-button" id="clear-formulas">Remove calculated</button></div>
-    </section></div>
+<section class="panel stats-panel"><div class="panel-head"><div><h2>Calculated statistics</h2><div class="panel-desc">Computed from each scenario in the selected time window</div></div><button class="btn" id="export-stats">↓ Export</button></div>
+    <div class="stat-table-wrap"><table class="stats-table"><thead id="stats-head"><tr><th>Species</th><th>Mean</th><th>Peak</th><th>Peak at</th><th>Δ</th></tr></thead><tbody id="stats-body"></tbody></table></div><div class="stat-caption">Δ mean compares each scenario with the first selected scenario. All calculations use original values.</div></section>
+
   <footer class="footer"><span><span class="footmark">BOX MODEL</span> &nbsp; · &nbsp; Published scenarios · Interactive chemical data exploration</span><span id="footer-note">Time inferred as minutes since midnight · Units unspecified by CSV</span></footer>
 </main></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script id="embedded-csv" type="text/plain">
@@ -118,7 +112,7 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
    try{await ensureScenarioCached(entry)}catch(e){console.warn('Scenario unavailable:',entry.title,e.message)}
   }));
  }
- let publishedId='initial',viewMode='published',localCSV=null,scenarioRequest=0;
+ let publishedId='initial',selectedScenarioIds=new Set(publishedScenarios.map(s=>s.id)),viewMode='published',localCSV=null,scenarioRequest=0;
  function paintMode(){
   document.body.classList.toggle('csv-mode',viewMode==='csv');
   document.body.classList.toggle('csv-loaded',viewMode==='csv'&&!!localCSV);
@@ -130,25 +124,21 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('view-label').textContent=viewMode==='csv'?'BOX MODEL / CSV EXPLORER':'BOX MODEL / PUBLISHED SCENARIOS';
   $('view-description').textContent=viewMode==='csv'?'Analyse your own CSV privately, separately from the published scenarios.':'Choose a published box-model scenario and explore its chemical evolution.';
  }
+ function activePublishedScenarios(){return publishedScenarios.filter(s=>selectedScenarioIds.has(s.id))}
  function fillScenarioSelector(){
-  const select=$('scenario-select');
-  select.replaceChildren(...publishedScenarios.map(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.title;return opt}));
-  select.value=publishedId;
+  $('scenario-list').innerHTML=publishedScenarios.map(s=>`<label class="scenario-choice"><input type="checkbox" data-scenario="${escapeHTML(s.id)}" ${selectedScenarioIds.has(s.id)?'checked':''}><span><strong>${escapeHTML(s.title)}</strong><small>${escapeHTML(s.filename)}</small></span></label>`).join('');
+  $('scenario-status').textContent=selectedScenarioIds.size>1?selectedScenarioIds.size+' scenarios together · fixed axes':'Select another scenario to compare.';
  }
  async function loadPublishedScenario(id,preserve=true){
-  const entry=publishedScenarios.find(s=>s.id===id);
-  if(!entry)throw Error('Unknown published scenario.');
+  const entries=activePublishedScenarios();
+  if(!entries.length)throw Error('Select at least one scenario.');
   const request=++scenarioRequest;
-  const csv=await ensureScenarioCached(entry);
+  await Promise.all(entries.map(e=>ensureScenarioCached(e)));
   if(request!==scenarioRequest)return;
-  const keep=preserve&&viewMode==='published'&&dataset!==null;
+  const primary=entries[0],keep=preserve&&viewMode==='published'&&dataset!==null;
   viewMode='published';
-  init(csv,entry.filename,keep);
-  publishedId=id;
-  $('scenario-select').value=id;
-  $('filename').textContent=entry.filename;
-  $('scenario-status').textContent='Published scenario · '+entry.title;
-  paintMode();
+  init(scenarioCache.get(primary.id),primary.filename,keep);
+  publishedId=primary.id;fillScenarioSelector();paintMode();
  }
  function showCSVExplorer(){
   ++scenarioRequest;
@@ -217,7 +207,7 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function val(row,name){let d=getSeries(name);return d?d.values[row]:dataset.data[row][name]}
  function init(text,file,preserve=false){
   const old=preserve&&dataset?{
-   names:[...selected], formulas:derived.map(d=>({name:d.name,expr:d.expr})),
+   names:[...selected],
    mode,search,
    t0:dataset.data[start]?.[dataset.timeKey],
    t1:dataset.data[end]?.[dataset.timeKey]
@@ -231,15 +221,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   selected=new Set(old?old.names.filter(n=>available.includes(n)):coreChemicals.filter(n=>parsed.names.includes(n)));
   if(!old&&selected.size===0)selected=new Set(parsed.names.slice(0,Math.min(3,parsed.names.length)));
   if(old){
-   for(const formula of old.formulas){
-    try{
-     if(dataset.names.includes(formula.name))continue;
-     const rpn=expressionToRPN(formula.expr);
-     const values=dataset.data.map((_,i)=>evaluate(rpn,i));
-     if(values.some(Number.isFinite))derived.push({...formula,values});
-    }catch(e){console.warn('Formula not available in new scenario:',formula.name,e.message)}
-   }
-   for(const name of old.names)if(derived.some(d=>d.name===name))selected.add(name);
    function nearestTime(t,fallback){
     if(!Number.isFinite(t))return fallback;
     let best=fallback,dist=Infinity;
@@ -258,9 +239,6 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('range-end').max=dataset.data.length-1;
   $('range-start').value=start;$('range-end').value=end;
   document.querySelectorAll('[data-scale]').forEach(b=>b.classList.toggle('active',b.dataset.scale===mode));
-  $('formula-error').textContent='';
-  $('calculated-name').value='NOx (calculated)';
-  $('formula-input').value='[NO] + [NO2]';
   $('footer-note').textContent=(clockMode?'Time interpreted as minutes since midnight':'Time shown in CSV units')+' · Concentration units not specified in CSV';
   renderAll();
  }
@@ -276,25 +254,54 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('range-start-text').textContent=timeAt(start);$('range-end-text').textContent=timeAt(end);
   const active=currentNames(), left=active.filter(n=>axisFor(n)==='left').length,right=active.length-left;
   $('scale-note').textContent=mode==='linear'?(viewMode==='published'?'Linear · shared scales across scenarios':'Linear · original values'):mode==='log'?(viewMode==='published'?'Log · shared scales across scenarios':'Log · nonpositive values hidden'):'Normalised by max |value| · shared axes for published scenarios';
-  $('chart-description').textContent=`${active.length} series · ${left} left / ${right} right · ${end-start+1} time steps · ${mode==='normalised'?'dimensionless':'model units unspecified'}`;
+  $('chart-description').textContent=(viewMode==='published'?activePublishedScenarios().length+' scenarios · ':'')+`${active.length} chemicals · ${left} left / ${right} right · ${end-start+1} time steps`;
  }
  function renderLegend(){
   const names=currentNames();
   $('legend').innerHTML=names.map(name=>{
-   const ax=axisFor(name);
-   const title=name==='OH'?'OH always uses the right Y-axis':'Uses the left Y-axis';
-   return `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<span class="axis-switch ${ax}" title="${title}" aria-label="${title}">${ax==='left'?'L':'R'}</span><button type="button" class="remove-series" title="Remove ${escapeHTML(name)}" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`;
-  }).join('')||'<span class="empty">Choose species from the left panel to show their curves.</span>';
+   const ax=axisFor(name),title=name==='OH'?'OH always uses the right Y-axis':'Uses the left Y-axis';
+   return `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<span class="axis-switch ${ax}" title="${title}">${ax==='left'?'L':'R'}</span><button type="button" class="remove-series" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`;
+  }).join('')||'<span class="empty">Select one or more chemicals.</span>';
+  const scenarios=viewMode==='published'?activePublishedScenarios():[];
+  $('scenario-line-legend').innerHTML=scenarios.length>1?scenarios.map((s,i)=>`<span class="scenario-line-item"><span class="scenario-line-sample ${i===0?'':i===1?'dashed':'dotted'}"></span>${escapeHTML(s.title)}</span>`).join(''):'';
  }
- function getStat(name){
-  const entries=dataset.data.slice(start,end+1).map((r,k)=>({value:val(start+k,name),time:r[dataset.timeKey]})).filter(o=>Number.isFinite(o.value));
-  if(!entries.length)return null;const raw=entries.map(e=>e.value);const sum=raw.reduce((a,b)=>a+b,0);const peak=entries.reduce((a,b)=>b.value>a.value?b:a);
-  const first=entries[0],last=entries[entries.length-1];let integral=0;
-  for(let i=1;i<entries.length;i++){if(entries[i].time>entries[i-1].time)integral+=(entries[i].value+entries[i-1].value)/2*(entries[i].time-entries[i-1].time)/(clockMode?60:1)}
-  return {initial:first.value,final:last.value,mean:sum/entries.length,peak:peak.value,peakAt:timeLabel(peak.time),delta:last.value-first.value,integral,count:entries.length};
+ function getStat(name,source=dataset){
+  const lo=dataset.data[start][dataset.timeKey],hi=dataset.data[end][dataset.timeKey];
+  const entries=source.data.map(r=>({value:r[name],time:r[source.timeKey]})).filter(o=>o.time>=lo&&o.time<=hi&&Number.isFinite(o.value));
+  if(!entries.length)return null;
+  const sum=entries.reduce((a,b)=>a+b.value,0),peak=entries.reduce((a,b)=>b.value>a.value?b:a),first=entries[0],last=entries.at(-1);
+  let integral=0;
+  for(let i=1;i<entries.length;i++)
+   if(entries[i].time>entries[i-1].time)integral+=(entries[i].value+entries[i-1].value)/2*(entries[i].time-entries[i-1].time)/(clockMode?60:1);
+  return {mean:sum/entries.length,peak:peak.value,peakAt:timeLabel(peak.time),delta:last.value-first.value,integral};
  }
- function renderStats(){let names=currentNames();$('stats-body').innerHTML=names.map(n=>{let s=getStat(n);if(!s)return '';
-  return `<tr><td><span class="species-in-table"><span class="stat-name-dot" style="background:${colour(n)}"></span>${escapeHTML(n)}</span></td><td>${niceNum(s.mean)}</td><td>${niceNum(s.peak)}</td><td>${s.peakAt}</td><td>${niceNum(s.delta)}</td></tr>`}).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#97a3b5">No series selected</td></tr>'}
+ function statRows(){
+  const sources=viewMode==='published'?activePublishedScenarios().map(s=>({title:s.title,src:parsedScenarioCache.get(s.id)})):[{title:'Uploaded CSV',src:dataset}];
+  const rows=[];
+  for(const name of currentNames()){
+   const baseline=getStat(name,sources[0].src);
+   for(const s of sources){
+    const stat=getStat(name,s.src);if(!stat)continue;
+    rows.push({...stat,name,scenario:s.title,diff:baseline?stat.mean-baseline.mean:NaN});
+   }
+  }
+  return rows;
+ }
+ function renderStats(){
+  const multi=viewMode==='published'&&activePublishedScenarios().length>1;
+  $('stats-head').innerHTML=multi?
+   '<tr><th>Species</th><th>Scenario</th><th>Mean</th><th>Δ mean</th><th>Peak</th><th>Peak at</th></tr>':
+   '<tr><th>Species</th><th>Mean</th><th>Peak</th><th>Peak at</th><th>Δ</th></tr>';
+  $('stats-body').innerHTML=statRows().map(s=>{
+   const col=`<td><span class="species-in-table"><span class="stat-name-dot" style="background:${colour(s.name)}"></span>${escapeHTML(s.name)}</span></td>`;
+   if(multi){
+    const dv=s.diff;
+    const diff=Number.isFinite(dv)?(dv>0?'+':'')+niceNum(dv):'—';
+    return `<tr>${col}<td>${escapeHTML(s.scenario)}</td><td>${niceNum(s.mean)}</td><td>${diff}</td><td>${niceNum(s.peak)}</td><td>${escapeHTML(s.peakAt)}</td></tr>`;
+   }
+   return `<tr>${col}<td>${niceNum(s.mean)}</td><td>${niceNum(s.peak)}</td><td>${escapeHTML(s.peakAt)}</td><td>${niceNum(s.delta)}</td></tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:25px">No chemicals selected</td></tr>';
+ }
  function tickStep(range, n=5){const rough=Math.max(range/n,1e-200),pow=Math.pow(10,Math.floor(Math.log10(rough))),r=rough/pow;return (r<=1?1:r<=2?2:r<=5?5:10)*pow}
  function computeAxisScale(series,allTimes=false){
   const values=series.flatMap(s=>allTimes?s.ys:s.ys.slice(start,end+1)).filter(v=>Number.isFinite(v)&&(mode!=='log'||v>0));
@@ -316,34 +323,32 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   return {valid:true,ymin,ymax,ticks,transform:v=>v,tickLabel:niceNum};
  }
  function computeScale(names){
-  const series=names.map(name=>{
-   const raw=dataset.data.map((r,i)=>val(i,name));
-   const subset=raw.slice(start,end+1).filter(Number.isFinite);
-   const peak=Math.max(...subset.map(Math.abs),0);
-   const ys=raw.map(v=>mode==='normalised'?(peak>0?v/peak:0):v);
-   return {name,ys,color:colour(name),axis:axisFor(name)};
-  });
+  const sources=viewMode==='published'?activePublishedScenarios().map(s=>({id:s.id,title:s.title,source:parsedScenarioCache.get(s.id)})):[{id:'local',title:'Local CSV',source:dataset}];
+  const series=[];
+  const t0=dataset.data[start][dataset.timeKey],t1=dataset.data[end][dataset.timeKey];
+  for(const [si,s] of sources.entries()){
+   if(!s.source)continue;
+   for(const name of names){
+    if(!s.source.names.includes(name))continue;
+    const values=s.source.data.map(r=>r[name]),times=s.source.data.map(r=>r[s.source.timeKey]);
+    const subset=values.filter((v,i)=>times[i]>=t0&&times[i]<=t1&&Number.isFinite(v));
+    const peak=Math.max(0,...subset.map(Math.abs));
+    series.push({name,ys:values.map(v=>mode==='normalised'?(peak>0?v/peak:0):v),times,
+      color:colour(name),axis:axisFor(name),title:s.title,scenarioId:s.id,scenarioIndex:si,source:s.source});
+   }
+  }
   const axes={};
   for(const axis of ['left','right']){
-   const current=series.filter(s=>s.axis===axis);
-   // Build a fixed domain from every published scenario, not only the active one.
-   // Use the entire time domain so zooming or switching scenarios never rescales it.
-   const reference=[];
+   const current=series.filter(s=>s.axis===axis),reference=[];
    if(viewMode==='published'){
     for(const scenario of publishedScenarios){
-     const other=parsedScenarioCache.get(scenario.id);
-     if(!other)continue;
-     for(const s of current){
-      if(!other.names.includes(s.name))continue;
-      const values=other.data.map(r=>r[s.name]);
-      const finite=values.filter(Number.isFinite);
-      const peak=Math.max(...finite.map(Math.abs),0);
-      const ys=values.map(v=>mode==='normalised'?(peak>0?v/peak:0):v);
-      reference.push({ys});
+     const other=parsedScenarioCache.get(scenario.id);if(!other)continue;
+     for(const name of names.filter(n=>axisFor(n)===axis)){
+      if(!other.names.includes(name))continue;
+      const values=other.data.map(r=>r[name]),finite=values.filter(Number.isFinite),peak=Math.max(0,...finite.map(Math.abs));
+      reference.push({ys:values.map(v=>mode==='normalised'?(peak>0?v/peak:0):v)});
      }
     }
-    // Keep calculated series visible; ordinary species remain comparable.
-    for(const s of current)if(getSeries(s.name))reference.push(s);
    }
    axes[axis]=computeAxisScale(reference.length?reference:current,reference.length>0);
   }
@@ -383,12 +388,15 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   sc.series.forEach(s=>{
    const a=sc.axes[s.axis];if(!a.valid)return;
    let path='',open=false;
-   for(let i=start;i<=end;i++){
-    const value=s.ys[i];if(!Number.isFinite(value)||(mode==='log'&&value<=0)){open=false;continue}
-    const py=yt(a.transform(value),s.axis),px=xt(times[i]);
+   for(let i=0;i<s.ys.length;i++){
+    const t=s.times[i],value=s.ys[i];
+    if(!Number.isFinite(t)||t<t0||t>t1||!Number.isFinite(value)||(mode==='log'&&value<=0)){open=false;continue}
+    const py=yt(a.transform(value),s.axis),px=xt(t);
     path+=(open?'L':'M')+px.toFixed(2)+' '+py.toFixed(2)+' ';open=true;
    }
-   if(path)el(lines,'path',{d:path,stroke:s.color,class:'line','data-series':s.name,'data-y-axis':s.axis});
+   const attr={d:path,stroke:s.color,class:'line','data-series':s.name,'data-scenario':s.scenarioId,'data-y-axis':s.axis};
+   if(s.scenarioIndex>0)attr['stroke-dasharray']=s.scenarioIndex===1?'7 5':s.scenarioIndex===2?'2 5':'10 5 2 5';
+   if(path)el(lines,'path',attr);
   });
   const hoverG=el(svg,'g',{'pointer-events':'none',style:'display:none'}),cross=el(hoverG,'line',{x1:0,x2:0,y1:m.t,y2:m.t+ph,class:'hover-line'});
   const hoverDots=el(hoverG,'g'),overlay=el(svg,'rect',{x:m.l,y:m.t,width:pw,height:ph,fill:'transparent',style:'cursor:crosshair'});
@@ -401,50 +409,40 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   const ti=p.times[start]+(x-p.m.l)/p.pw*(p.times[end]-p.times[start]);let best=start;
   for(let i=start+1;i<=end;i++)if(Math.abs(p.times[i]-ti)<Math.abs(p.times[best]-ti))best=i;
   hoverIdx=best;const cx=p.xt(p.times[best]);p.hoverG.style.display='';p.cross.setAttribute('x1',cx);p.cross.setAttribute('x2',cx);p.hoverDots.replaceChildren();
-  const rows=[];p.sc.series.forEach(s=>{const v=s.ys[best],raw=val(best,s.name),a=p.sc.axes[s.axis];
-   if(Number.isFinite(v)&&Number.isFinite(raw)){if(a.valid&&(mode!=='log'||v>0))el(p.hoverDots,'circle',{cx,cy:p.yt(a.transform(v),s.axis),r:4,fill:s.color,stroke:'#fff','stroke-width':1.5});rows.push({n:s.name,c:s.color,v:raw,axis:s.axis})}
+  const rows=[];p.sc.series.forEach(s=>{
+   const idx=s.times.findIndex(t=>t===p.times[best]);if(idx<0)return;
+   const v=s.ys[idx],raw=s.source.data[idx][s.name],a=p.sc.axes[s.axis];
+   if(Number.isFinite(v)&&Number.isFinite(raw)){
+    if(a.valid&&(mode!=='log'||v>0))el(p.hoverDots,'circle',{cx,cy:p.yt(a.transform(v),s.axis),r:4,fill:s.color,stroke:'#fff','stroke-width':1.3});
+    rows.push({n:s.name,scenario:s.title,c:s.color,v:raw,axis:s.axis});
+   }
   });
-  const tip=$('tooltip');tip.innerHTML=`<div class="tooltip-time">${escapeHTML(timeAt(best))}</div>`+rows.map(r=>`<div class="tooltip-row"><div class="left"><span class="swatch" style="background:${r.c}"></span><span>${escapeHTML(r.n)} (${r.axis==='left'?'L':'R'})</span></div><span class="value">${niceNum(r.v)}</span></div>`).join('');tip.style.display='block';
+  const tip=$('tooltip');tip.innerHTML=`<div class="tooltip-time">${escapeHTML(timeAt(best))}</div>`+rows.map(r=>`<div class="tooltip-row"><div class="left"><span class="swatch" style="background:${r.c}"></span><span>${escapeHTML(r.n)} · ${escapeHTML(r.scenario)}</span></div><span class="value">${niceNum(r.v)}</span></div>`).join('');tip.style.display='block';
   const rect=$('chart-wrap').getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
   let left=(evt.clientX-rect.left)+15;if(left+w>rect.width-5)left=evt.clientX-rect.left-w-15;
   tip.style.left=Math.max(0,left)+'px';tip.style.top=Math.max(4,Math.min((evt.clientY-rect.top)-h/2,rect.height-h-4))+'px';
  }
- function expressionToRPN(expr){
-  let tokens=[],i=0;
-  while(i<expr.length){let c=expr[i];if(/\s/.test(c)){i++;continue}
-   if(c==='['){let j=expr.indexOf(']',i+1);if(j<0)throw Error('Missing ] after a variable name.');let n=expr.slice(i+1,j).trim();if(!dataset.names.includes(n))throw Error(`Unknown variable: ${n}`);tokens.push({t:'v',v:n});i=j+1;continue}
-   const num=expr.slice(i).match(/^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);if(num){tokens.push({t:'n',v:Number(num[0])});i+=num[0].length;continue}
-   if('+-*/^()'.includes(c)){tokens.push({t:c==='('? '(':c===')'?')':'o',v:c});i++;continue}
-   throw Error(`Unexpected character '${c}'. Use [Variable] for column names.`)
-  }
-  if(!tokens.length)throw Error('Enter an expression.');
-  const output=[],stack=[],precedence={'+':1,'-':1,'*':2,'/':2,'u+':5,'u-':5,'^':4},rightAssoc=new Set(['^','u+','u-']);let prev='start';
-  for(const tok of tokens){
-   if(tok.t==='n'||tok.t==='v'){if(prev==='value'||prev===')')throw Error('Missing an operator between values.');output.push(tok);prev='value';continue}
-   if(tok.t==='('){if(prev==='value'||prev===')')throw Error('Missing an operator before (.');stack.push(tok);prev='(';continue}
-   if(tok.t===')'){if(prev==='o'||prev==='('||prev==='start')throw Error('Invalid expression inside parentheses.');let found=false;while(stack.length){let op=stack.pop();if(op.t==='('){found=true;break}output.push(op)}if(!found)throw Error('Unmatched closing parenthesis.');prev=')';continue}
-   let op=tok.v;if(prev==='start'||prev==='o'||prev==='('){if(op!=='-'&&op!=='+')throw Error(`Unexpected operator ${op}.`);op='u'+op}
-   const q={t:'o',v:op};while(stack.length&&stack.at(-1).t==='o'){
-    const top=stack.at(-1).v;if((!rightAssoc.has(op)&&precedence[op]<=precedence[top])||(rightAssoc.has(op)&&precedence[op]<precedence[top]))output.push(stack.pop());else break;
-   }
-   stack.push(q);prev='o';
-  }
-  if(prev==='o'||prev==='(')throw Error('The expression is incomplete.');while(stack.length){let op=stack.pop();if(op.t==='(')throw Error('Unmatched opening parenthesis.');output.push(op)}
-  return output;
- }
- function evaluate(rpn,row){let st=[];for(const t of rpn){if(t.t==='n'){st.push(t.v);continue}if(t.t==='v'){st.push(dataset.data[row][t.v]);continue}if(t.v==='u-'||t.v==='u+'){if(!st.length)throw Error('Invalid formula.');st.push((t.v==='u-'?-1:1)*st.pop());continue}if(st.length<2)throw Error('Invalid formula.');let b=st.pop(),a=st.pop();let v=t.v==='+'?a+b:t.v==='-'?a-b:t.v==='*'?a*b:t.v==='/'?(b===0?NaN:a/b):Math.pow(a,b);st.push(Number.isFinite(v)?v:NaN)}if(st.length!==1)throw Error('Invalid formula.');return st[0]}
- function addFormula(){const name=$('calculated-name').value.trim(),expr=$('formula-input').value.trim();$('formula-error').textContent='';
-  try{if(!name)throw Error('Enter a name.');if(name.length>65)throw Error('Name is too long.');if(nameList().includes(name))throw Error('This series name is already in use.');const rpn=expressionToRPN(expr);const values=dataset.data.map((_,i)=>evaluate(rpn,i));if(!values.some(Number.isFinite))throw Error('No valid results (check division by zero or invalid powers).');derived.push({name,expr,values});selected.add(name);colour(name);renderAll();toast(`${name} was added to the graph.`)}catch(err){$('formula-error').textContent=err.message}
- }
  function onRange(which,v){const n=dataset.data.length;const idx=Math.max(0,Math.min(n-1,parseInt(v,10)||0));if(which==='start')start=Math.min(idx,end-1);else end=Math.max(idx,start+1);$('range-start').value=start;$('range-end').value=end;renderPlotMeta();renderChart();renderStats()}
  function saveText(text,filename,type){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  function csvCell(s){let txt=String(s);return /[;"\r\n]/.test(txt)?'"'+txt.replace(/"/g,'""')+'"':txt}
- function exportSeries(){const names=currentNames();if(!names.length){toast('Select at least one species before exporting.');return}
-  const lines=[[dataset.timeKey,...names].map(csvCell).join(';')];for(let i=start;i<=end;i++)lines.push([dataset.data[i][dataset.timeKey],...names.map(n=>val(i,n))].map(v=>csvCell(formulaNumber(v))).join(';'));
-  saveText('\ufeff'+lines.join('\r\n'),'box_model_selected_series.csv','text/csv;charset=utf-8');toast('Selected series exported.')}
- function exportStats(){const names=currentNames();if(!names.length){toast('Select at least one species before exporting.');return}
-  const rows=[['Species','Mean','Peak','Peak time','Delta','Trapezoidal integral']];names.forEach(n=>{let s=getStat(n);if(s)rows.push([n,s.mean,s.peak,s.peakAt,s.delta,s.integral])});
-  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_statistics.csv','text/csv;charset=utf-8');toast('Statistics exported.')}
+ function exportSeries(){
+  const names=currentNames();if(!names.length){toast('Select a chemical before exporting.');return}
+  const sources=viewMode==='published'?activePublishedScenarios().map(s=>({title:s.title,src:parsedScenarioCache.get(s.id)})):[{title:'Uploaded CSV',src:dataset}];
+  const lo=dataset.data[start][dataset.timeKey],hi=dataset.data[end][dataset.timeKey];
+  const rows=[['Scenario',dataset.timeKey,...names]];
+  for(const s of sources)for(const row of s.src.data){
+   const t=row[s.src.timeKey];if(t<lo||t>hi)continue;
+   rows.push([s.title,t,...names.map(n=>row[n]??'')]);
+  }
+  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_selected_series.csv','text/csv;charset=utf-8');
+  toast('Selected series exported.');
+ }
+ function exportStats(){
+  const rows=[['Species','Scenario','Mean','Delta mean vs first scenario','Peak','Peak at','Change (final-initial)','Trapezoidal integral']];
+  for(const s of statRows())rows.push([s.name,s.scenario,s.mean,s.diff,s.peak,s.peakAt,s.delta,s.integral]);
+  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_statistics.csv','text/csv;charset=utf-8');
+  toast('Statistics exported.');
+ }
  function exportSVG(){const svg=$('chart').cloneNode(true);svg.querySelectorAll('rect[style*="cursor:crosshair"],g[pointer-events="none"]').forEach(n=>n.remove());svg.setAttribute('xmlns',svgNS);svg.setAttribute('width',Math.round($('chart-wrap').clientWidth));svg.setAttribute('height',$('chart').getBoundingClientRect().height);svg.insertAdjacentHTML('afterbegin','<style>text{font-family:Arial, sans-serif;font-size:11px;fill:#8b98ab}.gridline{stroke:#edf1f6;stroke-width:1}.axisline{stroke:#d9e1ea;stroke-width:1}.axis-title{font-size:10px;fill:#7a8799}.line{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5}</style>');saveText(new XMLSerializer().serializeToString(svg),'box_model_graph.svg','image/svg+xml;charset=utf-8');toast('SVG graph exported.')}
  $('species-list').addEventListener('change',e=>{let n=e.target.dataset.species;if(!n)return;if(e.target.checked)selected.add(n);else selected.delete(n);renderAll()});
  $('species-search').addEventListener('input',e=>{search=e.target.value;renderSpecies()});
@@ -453,13 +451,17 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  $('legend').addEventListener('click',e=>{const x=e.target.closest('[data-remove]');if(x){selected.delete(x.dataset.remove);renderAll()}});
  document.querySelectorAll('[data-scale]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.scale;document.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active',x===b));renderPlotMeta();renderChart()}));
  $('range-start').addEventListener('input',e=>onRange('start',e.target.value));$('range-end').addEventListener('input',e=>onRange('end',e.target.value));
- $('add-formula').addEventListener('click',addFormula);$('formula-input').addEventListener('keydown',e=>{if(e.key==='Enter')addFormula()});
- $('clear-formulas').addEventListener('click',()=>{derived.forEach(d=>selected.delete(d.name));derived=[];renderAll();toast('Calculated series removed.')});
- const examples={nox:['NOx (calculated)','[NO] + [NO2]'],ratio:['O3 / NO2','[O3] / [NO2]'],residual:['NOx residual','[NOx] - ([NO] + [NO2])']};
- document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{let [name,expr]=examples[b.dataset.example];$('calculated-name').value=name;$('formula-input').value=expr;$('formula-error').textContent=''}));
- $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);$('export-stats').addEventListener('click',exportStats);
+  $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);$('export-stats').addEventListener('click',exportStats);
  $('csv-upload').addEventListener('change',async e=>{const file=e.target.files?.[0];if(file){try{await openLocalCSV(file)}catch(err){toast('CSV error: '+err.message)}e.target.value=''}});
- $('scenario-select').addEventListener('change',async e=>{const previous=publishedId;try{await loadPublishedScenario(e.target.value)}catch(err){$('scenario-select').value=previous;toast(err.message)}});
+ $('scenario-list').addEventListener('change',async e=>{
+  if(!e.target.matches('input[data-scenario]'))return;
+  const previous=new Set(selectedScenarioIds);
+  const ids=[...document.querySelectorAll('#scenario-list input[data-scenario]:checked')].map(x=>x.dataset.scenario);
+  if(!ids.length){e.target.checked=true;toast('Select at least one scenario.');return}
+  selectedScenarioIds=new Set(ids);
+  try{await loadPublishedScenario(ids[0],true)}
+  catch(err){selectedScenarioIds=previous;fillScenarioSelector();toast(err.message)}
+ });
  $('published-tab').addEventListener('click',async ()=>{try{await loadPublishedScenario(publishedId)}catch(err){toast(err.message)}});
  $('csv-tab').addEventListener('click',showCSVExplorer);
  $('reset-btn').addEventListener('click',async ()=>{try{
