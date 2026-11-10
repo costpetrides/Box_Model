@@ -47,6 +47,8 @@ button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.
 .upload-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}.upload-actions span{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
 body.csv-mode:not(.csv-loaded) .plot-panel,body.csv-mode:not(.csv-loaded) .two-col,body.csv-mode:not(.csv-loaded) .side-species{display:none}
 body.csv-mode .data-section{display:none}
+body:not(.csv-mode) .side-species .search{display:none}
+.scenario-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
 @media(min-width:1500px){.plot-svg{height:460px}}
 @media(max-width:1190px){.layout{grid-template-columns:240px minmax(0,1fr)}.content{padding:30px 25px 40px}.sidebar{padding:25px 14px}.two-col{grid-template-columns:1fr}}
 @media(max-width:760px){.layout{display:block}.sidebar{border-right:0;border-bottom:1px solid var(--border);padding:17px;display:block}.brand{margin-bottom:18px}.sidebar .data-section{display:none}.side-species{margin-top:12px}.species-list{height:170px;min-height:0}.side-foot{display:none}.content{padding:23px 14px 32px}.topbar{display:flex;justify-content:space-between}.top-actions{justify-content:flex-end;margin-top:0}.plot-panel,.calc-panel,.stats-panel{padding:18px 14px}.plot-svg{height:310px}.panel-controls{width:100%}.plot-footer{align-items:flex-start}.two-col{display:block}.calc-panel{margin-top:16px}.footer{display:block}.footer span{display:block;margin-top:5px}}
@@ -107,7 +109,7 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
 <div class="layout" id="app">
 <aside class="sidebar" aria-label="Dashboard controls">
   <div class="brand"><strong>Box Model</strong></div>
-  <section class="data-section"><div id="scenario-list" class="scenario-list" role="group" aria-label="Choose scenarios to compare"></div><span id="filename" hidden></span></section>
+  <section class="data-section"><div class="scenario-actions"><button type="button" class="link-button" id="select-all-scenarios">Select all</button><button type="button" class="link-button" id="clear-all-scenarios">Clear all</button></div><div id="scenario-list" class="scenario-list" role="group" aria-label="Choose scenarios to compare"></div><span id="filename" hidden></span></section>
   <section class="side-species"><div class="label-row"><span class="eyebrow" style="margin:0">CHEMICAL SPECIES</span><span class="count" id="species-count">0 selected</span></div>
   <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="species-search" type="search" placeholder="Search chemicals..." aria-label="Search chemical species"></div>
   <div class="species-actions"><button class="link-button" id="key-species">Select all five</button><button class="link-button" id="clear-species">Clear all</button></div>
@@ -230,7 +232,11 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  }
  async function loadPublishedScenario(id,preserve=true){
   const entries=activePublishedScenarios();
-  if(!entries.length)throw Error('Select at least one scenario.');
+  if(!entries.length){
+   ++scenarioRequest;
+   viewMode='published';fillScenarioSelector();paintMode();renderChart();
+   return;
+  }
   const request=++scenarioRequest;
   await Promise.all(entries.map(e=>ensureScenarioCached(e)));
   if(request!==scenarioRequest)return;
@@ -352,7 +358,7 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   $('species-count').textContent=selected.size+' selected';
   const available=viewMode==='published'?coreChemicals.filter(n=>dataset.names.includes(n)):dataset.names;
   $('species-search').placeholder=`Search ${available.length} chemicals...`;
-  const names=[...available,...derived.map(s=>s.name)].filter(n=>n.toLowerCase().includes(search.toLowerCase()));
+  const names=[...available,...derived.map(s=>s.name)].filter(n=>viewMode==='published'||n.toLowerCase().includes(search.toLowerCase()));
   $('species-list').innerHTML=names.map(name=>`<label class="species-item" title="${escapeHTML(name)}"><input type="checkbox" data-species="${escapeHTML(name)}" ${selected.has(name)?'checked':''}><span class="species-dot" style="--dot:${selected.has(name)?colour(name):'#dce4ec'}"></span><span class="species-name">${escapeHTML(name)}</span>${getSeries(name)?'<span class="mini">ƒ</span>':''}</label>`).join('') || `<div class="empty" style="padding:18px">No matching chemicals</div>`;
  }
  function renderPlotMeta(){
@@ -495,6 +501,13 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   const entries=viewMode==='published'?activePublishedScenarios().map(s=>({id:s.id,title:s.title,filename:s.filename,source:parsedScenarioCache.get(s.id)})):
    [{id:'local',title:'Uploaded CSV',filename:localCSV?.filename||'CSV',source:dataset}];
   plotMeta=[];
+  if(!entries.length){
+   const empty=document.createElement('div');
+   empty.className='empty';
+   empty.textContent='Select a scenario to view its graph.';
+   empty.style.cssText='grid-column:1/-1;padding:36px 12px;text-align:center';
+   grid.appendChild(empty);return;
+  }
   const pendingPlots=[];
   // Build the entire grid first: the first plot must not measure its width
   // while it is still the only child of a two-column CSS grid.
@@ -711,15 +724,19 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  });
   $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);
  $('csv-upload').addEventListener('change',async e=>{const file=e.target.files?.[0];if(file){try{await openLocalCSV(file)}catch(err){toast('CSV error: '+err.message)}e.target.value=''}});
- $('scenario-list').addEventListener('change',async e=>{
-  if(!e.target.matches('input[data-scenario]'))return;
+ async function updateScenarioSelection(ids){
   const previous=new Set(selectedScenarioIds);
-  const ids=[...document.querySelectorAll('#scenario-list input[data-scenario]:checked')].map(x=>x.dataset.scenario);
-  if(!ids.length){e.target.checked=true;toast('Select at least one scenario.');return}
   selectedScenarioIds=new Set(ids);
   try{await loadPublishedScenario(ids[0],true)}
   catch(err){selectedScenarioIds=previous;fillScenarioSelector();toast(err.message)}
+ }
+ $('scenario-list').addEventListener('change',e=>{
+  if(!e.target.matches('input[data-scenario]'))return;
+  const ids=[...document.querySelectorAll('#scenario-list input[data-scenario]:checked')].map(x=>x.dataset.scenario);
+  updateScenarioSelection(ids);
  });
+ $('select-all-scenarios').addEventListener('click',()=>updateScenarioSelection(publishedScenarios.map(s=>s.id)));
+ $('clear-all-scenarios').addEventListener('click',()=>updateScenarioSelection([]));
  $('published-tab').addEventListener('click',async ()=>{try{await loadPublishedScenario(publishedId)}catch(err){toast(err.message)}});
  $('csv-tab').addEventListener('click',showCSVExplorer);
  $('reset-btn').addEventListener('click',async ()=>{try{
