@@ -35,8 +35,8 @@ body.csv-mode .data-section{display:none}
   <div class="brand"><div class="brandmark">B<span style="display:inline;color:#7ac5df;font-size:21px">.</span></div><div><strong>BOX MODEL</strong><span>Chemical evolution explorer</span></div></div>
   <section class="data-section"><div class="eyebrow">PUBLISHED SCENARIOS</div><div class="data-card"><label class="selector-label" for="scenario-select">Choose a scenario</label><select class="scenario-select" id="scenario-select" aria-label="Select published box model scenario"><option value="initial">Αρχικό</option></select><div class="filename" id="filename">TESTout1-Table 1.csv</div><div class="status" id="scenario-status">Published on this website</div></div></section>
   <section class="side-species"><div class="label-row"><span class="eyebrow" style="margin:0">CHEMICAL SPECIES</span><span class="count" id="species-count">0 selected</span></div>
-  <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="species-search" type="search" placeholder="Search 104 variables..." aria-label="Search chemical species"></div>
-  <div class="species-actions"><button class="link-button" id="key-species">Select key species</button><button class="link-button" id="clear-species">Clear all</button></div>
+  <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="species-search" type="search" placeholder="Search chemicals..." aria-label="Search chemical species"></div>
+  <div class="species-actions"><button class="link-button" id="key-species">Select all five</button><button class="link-button" id="clear-species">Clear all</button></div>
   <div class="species-list" id="species-list" aria-label="Select chemical series"></div></section>
   <div class="side-foot">A static, browser-only dashboard.<br>Suitable for <a href="https://github.com/costpetrides/Box_Model" target="_blank" rel="noopener noreferrer">GitHub Pages</a>.<br>No uploads leave your computer.</div>
 </aside>
@@ -47,11 +47,11 @@ body.csv-mode .data-section{display:none}
     <div><div class="overline">SEPARATE TOOL</div><h2>Explore your own CSV</h2><p>Load a CSV from your computer to analyse it privately. This does not change or publish any of the site's scenarios.</p></div>
     <div class="upload-actions"><label class="btn primary" for="csv-upload">Choose a CSV file</label><input id="csv-upload" class="file-input" type="file" accept=".csv,text/csv,text/plain"><span id="upload-filename" aria-live="polite">No local CSV loaded</span></div>
   </section>
-  <div class="kpis" aria-label="Dataset overview"><div class="kpi"><div class="k-label">Time steps</div><div class="k-value" id="k-steps">—</div><div class="k-sub">Records in current window</div></div><div class="kpi"><div class="k-label">Available variables</div><div class="k-value" id="k-variables">—</div><div class="k-sub">Columns other than time</div></div><div class="kpi"><div class="k-label">Time window</div><div class="k-value" id="k-window">—</div><div class="k-sub" id="k-window-sub">Start → end</div></div><div class="kpi"><div class="k-label">Plotted series</div><div class="k-value" id="k-plotted">—</div><div class="k-sub">Original + calculated series</div></div></div>
+  <div class="kpis" aria-label="Dataset overview"><div class="kpi"><div class="k-label">Time steps</div><div class="k-value" id="k-steps">—</div><div class="k-sub">Records in current window</div></div><div class="kpi"><div class="k-label">Available chemicals</div><div class="k-value" id="k-variables">—</div><div class="k-sub">Chemical species in this view</div></div><div class="kpi"><div class="k-label">Time window</div><div class="k-value" id="k-window">—</div><div class="k-sub" id="k-window-sub">Start → end</div></div><div class="kpi"><div class="k-label">Plotted series</div><div class="k-value" id="k-plotted">—</div><div class="k-sub">Original + calculated series</div></div></div>
   <section class="panel plot-panel"><div class="panel-head"><div><h2>Concentration over time</h2><div class="panel-desc" id="chart-description">Multiple species · one shared time axis · original model values</div></div>
     <div class="panel-controls"><div class="segmented" role="group" aria-label="Chart vertical scale"><button data-scale="linear" class="active" type="button">Linear</button><button data-scale="log" type="button">Log</button><button data-scale="normalised" type="button">Normalised</button></div><button class="btn" id="export-svg" title="Download current graph as an SVG">↓ SVG</button><button class="btn" id="export-series" title="Download visible series as CSV">↓ CSV</button></div></div>
     <div id="chart-wrap" class="chart-wrap"><svg id="chart" class="plot-svg" role="img" aria-label="Selected chemical species over time"></svg><div id="tooltip" class="chart-tooltip" role="status"></div></div>
-    <div class="legend-guide">Assign each chemical to an axis using its <strong>L / R</strong> button in the legend. Radicals default to the right Y-axis; both axes scale independently.</div>
+    <div class="legend-guide"><strong>OH always uses the right Y-axis.</strong> O₃, NO, NO₂ and CO use the left Y-axis. Published scenarios share identical axis scales for direct comparison.</div>
     <div id="legend" class="legend" aria-label="Series legend and Y-axis assignments"></div>
     <div class="plot-footer"><div class="range-wrap"><span class="range-name">Time range</span><span class="range-label" id="range-start-text">—</span><div class="range-sliders"><input id="range-start" type="range" min="0" max="18" value="0" aria-label="Start time index"><input id="range-end" type="range" min="0" max="18" value="18" aria-label="End time index"></div><span class="range-label" id="range-end-text">—</span></div><div class="small-note" id="scale-note">Linear scale · original units</div></div>
   </section>
@@ -99,7 +99,26 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   {id:'initial',title:'Αρχικό',filename:'TESTout1-Table 1.csv',url:null},
   {id:'alo-012',title:'ALO 0.12',filename:'ALO 0.12-Table 1.csv',url:'./ALO%200.12-Table%201.csv'}
  ];
+ const coreChemicals=['O3','NO','NO2','OH','CO'];
  const scenarioCache=new Map([['initial',embedded]]);
+ const parsedScenarioCache=new Map();
+ async function ensureScenarioCached(entry){
+  let csv=scenarioCache.get(entry.id);
+  if(!csv){
+   if(!entry.url)throw Error('This scenario has no CSV data.');
+   const response=await fetch(entry.url);
+   if(!response.ok)throw Error('Unable to load '+entry.title+' (HTTP '+response.status+').');
+   csv=await response.text();
+  }
+  if(!parsedScenarioCache.has(entry.id))parsedScenarioCache.set(entry.id,parseDelimited(csv));
+  scenarioCache.set(entry.id,csv);
+  return csv;
+ }
+ async function preloadPublishedScenarios(){
+  await Promise.all(publishedScenarios.map(async entry=>{
+   try{await ensureScenarioCached(entry)}catch(e){console.warn('Scenario unavailable:',entry.title,e.message)}
+  }));
+ }
  let publishedId='initial',viewMode='published',localCSV=null,scenarioRequest=0;
  function paintMode(){
   document.body.classList.toggle('csv-mode',viewMode==='csv');
@@ -117,22 +136,16 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   select.replaceChildren(...publishedScenarios.map(s=>{const opt=document.createElement('option');opt.value=s.id;opt.textContent=s.title;return opt}));
   select.value=publishedId;
  }
- async function loadPublishedScenario(id){
+ async function loadPublishedScenario(id,preserve=true){
   const entry=publishedScenarios.find(s=>s.id===id);
   if(!entry)throw Error('Unknown published scenario.');
   const request=++scenarioRequest;
-  let csv=scenarioCache.get(id);
-  if(!csv){
-   if(!entry.url)throw Error('This scenario has no CSV data.');
-   const response=await fetch(entry.url);
-   if(!response.ok)throw Error('Unable to load '+entry.title+' (HTTP '+response.status+').');
-   csv=await response.text();
-   scenarioCache.set(id,csv);
-  }
+  const csv=await ensureScenarioCached(entry);
   if(request!==scenarioRequest)return;
-  init(csv,entry.filename);
-  publishedId=id;
+  const keep=preserve&&viewMode==='published'&&dataset!==null;
   viewMode='published';
+  init(csv,entry.filename,keep);
+  publishedId=id;
   $('scenario-select').value=id;
   $('filename').textContent=entry.filename;
   $('scenario-status').textContent='Published scenario · '+entry.title;
@@ -158,11 +171,10 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   toast('Local CSV loaded: '+file.name);
  }
  const palette = ['#2777b6','#e77b49','#139e92','#8e62c7','#de5e8b','#9b9928','#3a9acc','#be7152','#5472bd','#5d9c58','#c45d9b','#af8128'];
- let dataset=null, selected=new Set(), derived=[], mode='linear', start=0,end=0, search='', hoverIdx=-1, colorRegistry=new Map(), nextColour=0, clockMode=false, toastTimeout, axisByName=new Map();
+ let dataset=null, selected=new Set(), derived=[], mode='linear', start=0,end=0, search='', hoverIdx=-1, colorRegistry=new Map(), nextColour=0, clockMode=false, toastTimeout;
  const getSeries = name => derived.find(s=>s.name===name);
- // These species are typically low-abundance radicals. Users can override any assignment.
- const defaultAxis = name => /^(?:OH|HO2|NO3|MEO2|RO2[A-Z0-9]*|RCO3|MECO3|MACO3|BZCO3|CL|CLO|BR|BRO)$/i.test(name)?'right':'left';
- const axisFor = name => axisByName.get(name) || defaultAxis(name);
+ // OH has a permanent, separate Y-axis. All other species use the left axis.
+ const axisFor = name => name==='OH'?'right':'left';
  const nameList = () => [...dataset.names, ...derived.map(s=>s.name)];
  function colour(name){if(!colorRegistry.has(name))colorRegistry.set(name,palette[nextColour++%palette.length]);return colorRegistry.get(name)}
  function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -202,32 +214,82 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function formulaNumber(n){return Number.isFinite(n)?String(n):''}
  function timeLabel(v){if(clockMode){let h=Math.floor(v/60),m=Math.round(v%60);if(m===60){h++;m=0}return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}return niceNum(v)}
  function timeAt(i){return timeLabel(dataset.data[i][dataset.timeKey])}
- function currentNames(){return [...selected].filter(name=>dataset.names.includes(name)||!!getSeries(name))}
+ function currentNames(){return [...selected].filter(name=>(dataset.names.includes(name)&&(viewMode!=='published'||coreChemicals.includes(name)))||!!getSeries(name))}
  function val(row,name){let d=getSeries(name);return d?d.values[row]:dataset.data[row][name]}
- function init(text,file){
-  const parsed=parseDelimited(text);dataset=parsed;clockMode=dataset.clock;derived=[];axisByName=new Map();start=0;end=dataset.data.length-1;mode='linear';colorRegistry=new Map();nextColour=0;search='';selected=new Set(['O3','NO','NO2'].filter(n=>parsed.names.includes(n)));
-  if(selected.size===0)selected=new Set(parsed.names.slice(0,Math.min(3,parsed.names.length)));
-  $('filename').textContent=file;$('species-search').value='';$('range-start').max=end;$('range-end').max=end;$('range-start').value=0;$('range-end').value=end;
-  document.querySelectorAll('[data-scale]').forEach(b=>b.classList.toggle('active',b.dataset.scale===mode));$('formula-error').textContent='';$('calculated-name').value='NOx (calculated)';$('formula-input').value='[NO] + [NO2]';
+ function init(text,file,preserve=false){
+  const old=preserve&&dataset?{
+   names:[...selected], formulas:derived.map(d=>({name:d.name,expr:d.expr})),
+   mode,search,
+   t0:dataset.data[start]?.[dataset.timeKey],
+   t1:dataset.data[end]?.[dataset.timeKey]
+  }:null;
+  const parsed=parseDelimited(text);
+  dataset=parsed;clockMode=dataset.clock;derived=[];
+  start=0;end=dataset.data.length-1;mode=old?old.mode:'linear';
+  colorRegistry=new Map();nextColour=0;search=old?old.search:'';
+  // The published dashboard only exposes five chosen species; uploaded CSVs remain unrestricted.
+  const available=viewMode==='published'?coreChemicals:parsed.names;
+  selected=new Set(old?old.names.filter(n=>available.includes(n)):coreChemicals.filter(n=>parsed.names.includes(n)));
+  if(!old&&selected.size===0)selected=new Set(parsed.names.slice(0,Math.min(3,parsed.names.length)));
+  if(old){
+   for(const formula of old.formulas){
+    try{
+     if(dataset.names.includes(formula.name))continue;
+     const rpn=expressionToRPN(formula.expr);
+     const values=dataset.data.map((_,i)=>evaluate(rpn,i));
+     if(values.some(Number.isFinite))derived.push({...formula,values});
+    }catch(e){console.warn('Formula not available in new scenario:',formula.name,e.message)}
+   }
+   for(const name of old.names)if(derived.some(d=>d.name===name))selected.add(name);
+   function nearestTime(t,fallback){
+    if(!Number.isFinite(t))return fallback;
+    let best=fallback,dist=Infinity;
+    dataset.data.forEach((r,i)=>{
+     const d=Math.abs(r[dataset.timeKey]-t);
+     if(d<dist){best=i;dist=d}
+    });
+    return best;
+   }
+   start=nearestTime(old.t0,0);end=nearestTime(old.t1,dataset.data.length-1);
+   if(start>=end){start=0;end=dataset.data.length-1}
+  }
+  $('filename').textContent=file;
+  $('species-search').value=search;
+  $('range-start').max=dataset.data.length-1;
+  $('range-end').max=dataset.data.length-1;
+  $('range-start').value=start;$('range-end').value=end;
+  document.querySelectorAll('[data-scale]').forEach(b=>b.classList.toggle('active',b.dataset.scale===mode));
+  $('formula-error').textContent='';
+  $('calculated-name').value='NOx (calculated)';
+  $('formula-input').value='[NO] + [NO2]';
   $('footer-note').textContent=(clockMode?'Time interpreted as minutes since midnight':'Time shown in CSV units')+' · Concentration units not specified in CSV';
   renderAll();
  }
  function renderAll(){renderSpecies();renderKPIs();renderLegend();renderChart();renderStats()}
  function renderSpecies(){
-  $('species-count').textContent=selected.size+' selected';$('species-search').placeholder=`Search ${dataset.names.length} variables...`;
-  const names=nameList().filter(n=>n.toLowerCase().includes(search.toLowerCase()));
-  $('species-list').innerHTML=names.map(name=>`<label class="species-item" title="${escapeHTML(name)}"><input type="checkbox" data-species="${escapeHTML(name)}" ${selected.has(name)?'checked':''}><span class="species-dot" style="--dot:${selected.has(name)?colour(name):'#dce4ec'}"></span><span class="species-name">${escapeHTML(name)}</span>${getSeries(name)?'<span class="mini">ƒ</span>':''}</label>`).join('') || `<div class="empty" style="padding:18px">No matching variables</div>`;
+  $('species-count').textContent=selected.size+' selected';
+  const available=viewMode==='published'?coreChemicals.filter(n=>dataset.names.includes(n)):dataset.names;
+  $('species-search').placeholder=`Search ${available.length} chemicals...`;
+  const names=[...available,...derived.map(s=>s.name)].filter(n=>n.toLowerCase().includes(search.toLowerCase()));
+  $('species-list').innerHTML=names.map(name=>`<label class="species-item" title="${escapeHTML(name)}"><input type="checkbox" data-species="${escapeHTML(name)}" ${selected.has(name)?'checked':''}><span class="species-dot" style="--dot:${selected.has(name)?colour(name):'#dce4ec'}"></span><span class="species-name">${escapeHTML(name)}</span>${getSeries(name)?'<span class="mini">ƒ</span>':''}</label>`).join('') || `<div class="empty" style="padding:18px">No matching chemicals</div>`;
  }
  function renderKPIs(){
   const from=dataset.data[start][dataset.timeKey],to=dataset.data[end][dataset.timeKey];
-  $('k-steps').textContent=end-start+1;$('k-variables').textContent=dataset.names.length;$('k-plotted').textContent=currentNames().length;
+  $('k-steps').textContent=end-start+1;$('k-variables').textContent=viewMode==='published'?coreChemicals.filter(n=>dataset.names.includes(n)).length:dataset.names.length;$('k-plotted').textContent=currentNames().length;
   $('k-window').textContent=clockMode?niceNum((to-from)/60)+' h':niceNum(to-from);$('k-window-sub').textContent=timeAt(start)+' → '+timeAt(end);
   $('range-start-text').textContent=timeAt(start);$('range-end-text').textContent=timeAt(end);
   const active=currentNames(), left=active.filter(n=>axisFor(n)==='left').length,right=active.length-left;
-  $('scale-note').textContent=mode==='linear'?'Linear scale · independent axes, original values':mode==='log'?'Log scale on both axes · nonpositive values hidden':'Normalised by max |value| per series · independent axes';
+  $('scale-note').textContent=mode==='linear'?(viewMode==='published'?'Linear · shared scales across scenarios':'Linear · original values'):mode==='log'?(viewMode==='published'?'Log · shared scales across scenarios':'Log · nonpositive values hidden'):'Normalised by max |value| · shared axes for published scenarios';
   $('chart-description').textContent=`${active.length} series · ${left} left / ${right} right · ${end-start+1} time steps · ${mode==='normalised'?'dimensionless':'model units unspecified'}`;
  }
- function renderLegend(){const names=currentNames();$('legend').innerHTML=names.map(name=>{const ax=axisFor(name),next=ax==='left'?'right':'left';return `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<button type="button" class="axis-switch ${ax}" data-axis="${escapeHTML(name)}" title="Currently on ${ax} Y-axis; move to ${next}" aria-label="Move ${escapeHTML(name)} to ${next} Y-axis">${ax==='left'?'L':'R'}</button><button type="button" class="remove-series" title="Remove ${escapeHTML(name)}" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`}).join('')||'<span class="empty">Choose species from the left panel to show their curves.</span>'}
+ function renderLegend(){
+  const names=currentNames();
+  $('legend').innerHTML=names.map(name=>{
+   const ax=axisFor(name);
+   const title=name==='OH'?'OH always uses the right Y-axis':'Uses the left Y-axis';
+   return `<span class="legend-item"><span class="swatch" style="background:${colour(name)}"></span>${escapeHTML(name)}<span class="axis-switch ${ax}" title="${title}" aria-label="${title}">${ax==='left'?'L':'R'}</span><button type="button" class="remove-series" title="Remove ${escapeHTML(name)}" data-remove="${escapeHTML(name)}" aria-label="Remove ${escapeHTML(name)}">×</button></span>`;
+  }).join('')||'<span class="empty">Choose species from the left panel to show their curves.</span>';
+ }
  function getStat(name){
   const entries=dataset.data.slice(start,end+1).map((r,k)=>({value:val(start+k,name),time:r[dataset.timeKey]})).filter(o=>Number.isFinite(o.value));
   if(!entries.length)return null;const raw=entries.map(e=>e.value);const sum=raw.reduce((a,b)=>a+b,0);const peak=entries.reduce((a,b)=>b.value>a.value?b:a);
@@ -238,8 +300,8 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function renderStats(){let names=currentNames();$('stats-body').innerHTML=names.map(n=>{let s=getStat(n);if(!s)return '';
   return `<tr><td><span class="species-in-table"><span class="stat-name-dot" style="background:${colour(n)}"></span>${escapeHTML(n)}</span></td><td>${niceNum(s.mean)}</td><td>${niceNum(s.peak)}</td><td>${s.peakAt}</td><td>${niceNum(s.delta)}</td></tr>`}).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#97a3b5">No series selected</td></tr>'}
  function tickStep(range, n=5){const rough=Math.max(range/n,1e-200),pow=Math.pow(10,Math.floor(Math.log10(rough))),r=rough/pow;return (r<=1?1:r<=2?2:r<=5?5:10)*pow}
- function computeAxisScale(series){
-  const values=series.flatMap(s=>s.ys.slice(start,end+1)).filter(v=>Number.isFinite(v)&&(mode!=='log'||v>0));
+ function computeAxisScale(series,allTimes=false){
+  const values=series.flatMap(s=>allTimes?s.ys:s.ys.slice(start,end+1)).filter(v=>Number.isFinite(v)&&(mode!=='log'||v>0));
   if(!values.length)return {valid:false};
   if(mode==='log'){
    const lows=values.map(v=>Math.log10(v)),a=Math.floor(Math.min(...lows)),b=Math.ceil(Math.max(...lows));
@@ -260,11 +322,35 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function computeScale(names){
   const series=names.map(name=>{
    const raw=dataset.data.map((r,i)=>val(i,name));
-   const subset=raw.slice(start,end+1).filter(Number.isFinite),peak=Math.max(...subset.map(Math.abs),0);
+   const subset=raw.slice(start,end+1).filter(Number.isFinite);
+   const peak=Math.max(...subset.map(Math.abs),0);
    const ys=raw.map(v=>mode==='normalised'?(peak>0?v/peak:0):v);
    return {name,ys,color:colour(name),axis:axisFor(name)};
   });
-  const axes={left:computeAxisScale(series.filter(s=>s.axis==='left')),right:computeAxisScale(series.filter(s=>s.axis==='right'))};
+  const axes={};
+  for(const axis of ['left','right']){
+   const current=series.filter(s=>s.axis===axis);
+   // Build a fixed domain from every published scenario, not only the active one.
+   // Use the entire time domain so zooming or switching scenarios never rescales it.
+   const reference=[];
+   if(viewMode==='published'){
+    for(const scenario of publishedScenarios){
+     const other=parsedScenarioCache.get(scenario.id);
+     if(!other)continue;
+     for(const s of current){
+      if(!other.names.includes(s.name))continue;
+      const values=other.data.map(r=>r[s.name]);
+      const finite=values.filter(Number.isFinite);
+      const peak=Math.max(...finite.map(Math.abs),0);
+      const ys=values.map(v=>mode==='normalised'?(peak>0?v/peak:0):v);
+      reference.push({ys});
+     }
+    }
+    // Keep calculated series visible; ordinary species remain comparable.
+    for(const s of current)if(getSeries(s.name))reference.push(s);
+   }
+   axes[axis]=computeAxisScale(reference.length?reference:current,reference.length>0);
+  }
   return {series,axes,valid:axes.left.valid||axes.right.valid};
  }
  function superscript(v){return String(v).replace(/-/g,'⁻').replace(/0/g,'⁰').replace(/1/g,'¹').replace(/2/g,'²').replace(/3/g,'³').replace(/4/g,'⁴').replace(/5/g,'⁵').replace(/6/g,'⁶').replace(/7/g,'⁷').replace(/8/g,'⁸').replace(/9/g,'⁹')}
@@ -366,13 +452,13 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function exportSVG(){const svg=$('chart').cloneNode(true);svg.querySelectorAll('rect[style*="cursor:crosshair"],g[pointer-events="none"]').forEach(n=>n.remove());svg.setAttribute('xmlns',svgNS);svg.setAttribute('width',Math.round($('chart-wrap').clientWidth));svg.setAttribute('height',$('chart').getBoundingClientRect().height);svg.insertAdjacentHTML('afterbegin','<style>text{font-family:Arial, sans-serif;font-size:11px;fill:#8b98ab}.gridline{stroke:#edf1f6;stroke-width:1}.axisline{stroke:#d9e1ea;stroke-width:1}.axis-title{font-size:10px;fill:#7a8799}.line{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5}</style>');saveText(new XMLSerializer().serializeToString(svg),'box_model_graph.svg','image/svg+xml;charset=utf-8');toast('SVG graph exported.')}
  $('species-list').addEventListener('change',e=>{let n=e.target.dataset.species;if(!n)return;if(e.target.checked)selected.add(n);else selected.delete(n);renderAll()});
  $('species-search').addEventListener('input',e=>{search=e.target.value;renderSpecies()});
- $('key-species').addEventListener('click',()=>{['O3','NO','NO2','OH','HO2'].forEach(n=>{if(dataset.names.includes(n))selected.add(n)});renderAll()});
+ $('key-species').addEventListener('click',()=>{coreChemicals.forEach(n=>{if(dataset.names.includes(n))selected.add(n)});renderAll()});
  $('clear-species').addEventListener('click',()=>{selected.clear();renderAll()});
- $('legend').addEventListener('click',e=>{const a=e.target.closest('[data-axis]');if(a){const name=a.dataset.axis;axisByName.set(name,axisFor(name)==='left'?'right':'left');renderKPIs();renderLegend();renderChart();return}const x=e.target.closest('[data-remove]');if(x){selected.delete(x.dataset.remove);renderAll()}});
+ $('legend').addEventListener('click',e=>{const x=e.target.closest('[data-remove]');if(x){selected.delete(x.dataset.remove);renderAll()}});
  document.querySelectorAll('[data-scale]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.scale;document.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active',x===b));renderKPIs();renderChart()}));
  $('range-start').addEventListener('input',e=>onRange('start',e.target.value));$('range-end').addEventListener('input',e=>onRange('end',e.target.value));
  $('add-formula').addEventListener('click',addFormula);$('formula-input').addEventListener('keydown',e=>{if(e.key==='Enter')addFormula()});
- $('clear-formulas').addEventListener('click',()=>{derived.forEach(d=>{selected.delete(d.name);axisByName.delete(d.name)});derived=[];renderAll();toast('Calculated series removed.')});
+ $('clear-formulas').addEventListener('click',()=>{derived.forEach(d=>selected.delete(d.name));derived=[];renderAll();toast('Calculated series removed.')});
  const examples={nox:['NOx (calculated)','[NO] + [NO2]'],ratio:['O3 / NO2','[O3] / [NO2]'],residual:['NOx residual','[NOx] - ([NO] + [NO2])']};
  document.querySelectorAll('[data-example]').forEach(b=>b.addEventListener('click',()=>{let [name,expr]=examples[b.dataset.example];$('calculated-name').value=name;$('formula-input').value=expr;$('formula-error').textContent=''}));
  $('export-svg').addEventListener('click',exportSVG);$('export-series').addEventListener('click',exportSeries);$('export-stats').addEventListener('click',exportStats);
@@ -382,12 +468,16 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  $('csv-tab').addEventListener('click',showCSVExplorer);
  $('reset-btn').addEventListener('click',async ()=>{try{
   if(viewMode==='csv'){if(localCSV){init(localCSV.content,localCSV.filename);toast('Local CSV view reset.')}else toast('Choose a CSV file to explore.')}
-  else{await loadPublishedScenario(publishedId);toast('Scenario reset.')}
+  else{await loadPublishedScenario(publishedId,false);toast('Scenario reset.')}
  }catch(err){toast(err.message)}});
  let dropDepth=0;window.addEventListener('dragenter',e=>{if([...e.dataTransfer?.types||[]].includes('Files')){dropDepth++;document.body.classList.add('drop-active')}});window.addEventListener('dragleave',()=>{dropDepth=Math.max(0,dropDepth-1);if(!dropDepth)document.body.classList.remove('drop-active')});window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',async e=>{e.preventDefault();dropDepth=0;document.body.classList.remove('drop-active');const file=e.dataTransfer?.files?.[0];if(file){try{await openLocalCSV(file)}catch(err){toast('CSV error: '+err.message)}}});
  if('ResizeObserver'in window){new ResizeObserver(()=>{if(dataset)renderChart()}).observe($('chart-wrap'))}else window.addEventListener('resize',()=>{if(dataset)renderChart()});
  fillScenarioSelector();
- loadPublishedScenario('initial').catch(e=>{$('chart-description').textContent=e.message;console.error(e)});
+ (async()=>{
+  await preloadPublishedScenarios();
+  await loadPublishedScenario('initial',false);
+ })().catch(e=>{$('chart-description').textContent=e.message;console.error(e)});
+
 })();
 </script>
 </body>
