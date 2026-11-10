@@ -336,6 +336,9 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   const entries=viewMode==='published'?activePublishedScenarios().map(s=>({id:s.id,title:s.title,filename:s.filename,source:parsedScenarioCache.get(s.id)})):
    [{id:'local',title:'Uploaded CSV',filename:localCSV?.filename||'CSV',source:dataset}];
   plotMeta=[];
+  const pendingPlots=[];
+  // Build the entire grid first: the first plot must not measure its width
+  // while it is still the only child of a two-column CSS grid.
   for(const entry of entries){
    if(!entry.source)continue;
    const card=document.createElement('section');card.className='scenario-figure';
@@ -346,6 +349,10 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
    svg.setAttribute('role','img');svg.setAttribute('aria-label',entry.title+' concentrations over time');
    const tip=document.createElement('div');tip.className='chart-tooltip';tip.setAttribute('role','status');
    wrap.append(svg,tip);card.append(heading,desc,wrap);grid.appendChild(card);
+   pendingPlots.push({svg,wrap,tip,entry});
+  }
+  // The columns now have their final widths, so every SVG uses the right viewBox.
+  for(const {svg,wrap,tip,entry} of pendingPlots){
    drawScenario(svg,wrap,tip,sc,entry);
    plotMeta.push({svg,title:entry.title});
   }
