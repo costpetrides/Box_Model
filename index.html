@@ -274,15 +274,43 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
   const scenarios=viewMode==='published'?activePublishedScenarios():[];
   $('scenario-line-legend').innerHTML=scenarios.length>1?scenarios.map((s,i)=>`<span class="scenario-line-item"><span class="scenario-line-sample ${i===0?'':i===1?'dashed':'dotted'}"></span>${escapeHTML(s.title)}</span>`).join(''):'';
  }
- function getStat(name){
-  const entries=dataset.data.slice(start,end+1).map((r,k)=>({value:val(start+k,name),time:r[dataset.timeKey]})).filter(o=>Number.isFinite(o.value));
-  if(!entries.length)return null;const raw=entries.map(e=>e.value);const sum=raw.reduce((a,b)=>a+b,0);const peak=entries.reduce((a,b)=>b.value>a.value?b:a);
-  const first=entries[0],last=entries[entries.length-1];let integral=0;
-  for(let i=1;i<entries.length;i++){if(entries[i].time>entries[i-1].time)integral+=(entries[i].value+entries[i-1].value)/2*(entries[i].time-entries[i-1].time)/(clockMode?60:1)}
-  return {initial:first.value,final:last.value,mean:sum/entries.length,peak:peak.value,peakAt:timeLabel(peak.time),delta:last.value-first.value,integral,count:entries.length};
+ function getStat(name,source=dataset){
+  const lo=dataset.data[start][dataset.timeKey],hi=dataset.data[end][dataset.timeKey];
+  const entries=source.data.map(r=>({value:r[name],time:r[source.timeKey]})).filter(o=>o.time>=lo&&o.time<=hi&&Number.isFinite(o.value));
+  if(!entries.length)return null;
+  const sum=entries.reduce((a,b)=>a+b.value,0),peak=entries.reduce((a,b)=>b.value>a.value?b:a),first=entries[0],last=entries.at(-1);
+  let integral=0;
+  for(let i=1;i<entries.length;i++)
+   if(entries[i].time>entries[i-1].time)integral+=(entries[i].value+entries[i-1].value)/2*(entries[i].time-entries[i-1].time)/(clockMode?60:1);
+  return {mean:sum/entries.length,peak:peak.value,peakAt:timeLabel(peak.time),delta:last.value-first.value,integral};
  }
- function renderStats(){let names=currentNames();$('stats-body').innerHTML=names.map(n=>{let s=getStat(n);if(!s)return '';
-  return `<tr><td><span class="species-in-table"><span class="stat-name-dot" style="background:${colour(n)}"></span>${escapeHTML(n)}</span></td><td>${niceNum(s.mean)}</td><td>${niceNum(s.peak)}</td><td>${s.peakAt}</td><td>${niceNum(s.delta)}</td></tr>`}).join('')||'<tr><td colspan="5" style="text-align:center;padding:30px;color:#97a3b5">No series selected</td></tr>'}
+ function statRows(){
+  const sources=viewMode==='published'?activePublishedScenarios().map(s=>({title:s.title,src:parsedScenarioCache.get(s.id)})):[{title:'Uploaded CSV',src:dataset}];
+  const rows=[];
+  for(const name of currentNames()){
+   const baseline=getStat(name,sources[0].src);
+   for(const s of sources){
+    const stat=getStat(name,s.src);if(!stat)continue;
+    rows.push({...stat,name,scenario:s.title,diff:baseline?stat.mean-baseline.mean:NaN});
+   }
+  }
+  return rows;
+ }
+ function renderStats(){
+  const multi=viewMode==='published'&&activePublishedScenarios().length>1;
+  $('stats-head').innerHTML=multi?
+   '<tr><th>Species</th><th>Scenario</th><th>Mean</th><th>Δ mean</th><th>Peak</th><th>Peak at</th></tr>':
+   '<tr><th>Species</th><th>Mean</th><th>Peak</th><th>Peak at</th><th>Δ</th></tr>';
+  $('stats-body').innerHTML=statRows().map(s=>{
+   const col=`<td><span class="species-in-table"><span class="stat-name-dot" style="background:${colour(s.name)}"></span>${escapeHTML(s.name)}</span></td>`;
+   if(multi){
+    const dv=s.diff;
+    const diff=Number.isFinite(dv)?(dv>0?'+':'')+niceNum(dv):'—';
+    return `<tr>${col}<td>${escapeHTML(s.scenario)}</td><td>${niceNum(s.mean)}</td><td>${diff}</td><td>${niceNum(s.peak)}</td><td>${escapeHTML(s.peakAt)}</td></tr>`;
+   }
+   return `<tr>${col}<td>${niceNum(s.mean)}</td><td>${niceNum(s.peak)}</td><td>${escapeHTML(s.peakAt)}</td><td>${niceNum(s.delta)}</td></tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:25px">No chemicals selected</td></tr>';
+ }
  function tickStep(range, n=5){const rough=Math.max(range/n,1e-200),pow=Math.pow(10,Math.floor(Math.log10(rough))),r=rough/pow;return (r<=1?1:r<=2?2:r<=5?5:10)*pow}
  function computeAxisScale(series,allTimes=false){
   const values=series.flatMap(s=>allTimes?s.ys:s.ys.slice(start,end+1)).filter(v=>Number.isFinite(v)&&(mode!=='log'||v>0));
@@ -433,12 +461,24 @@ Time ;O3;NO;NO2;OH;NO3;N2O5;HNO3;HONO;HO2;CO;HNO4;HO2H;SO2;MEO2;HCHO;COOH;MEOH;R
  function onRange(which,v){const n=dataset.data.length;const idx=Math.max(0,Math.min(n-1,parseInt(v,10)||0));if(which==='start')start=Math.min(idx,end-1);else end=Math.max(idx,start+1);$('range-start').value=start;$('range-end').value=end;renderPlotMeta();renderChart();renderStats()}
  function saveText(text,filename,type){const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  function csvCell(s){let txt=String(s);return /[;"\r\n]/.test(txt)?'"'+txt.replace(/"/g,'""')+'"':txt}
- function exportSeries(){const names=currentNames();if(!names.length){toast('Select at least one species before exporting.');return}
-  const lines=[[dataset.timeKey,...names].map(csvCell).join(';')];for(let i=start;i<=end;i++)lines.push([dataset.data[i][dataset.timeKey],...names.map(n=>val(i,n))].map(v=>csvCell(formulaNumber(v))).join(';'));
-  saveText('\ufeff'+lines.join('\r\n'),'box_model_selected_series.csv','text/csv;charset=utf-8');toast('Selected series exported.')}
- function exportStats(){const names=currentNames();if(!names.length){toast('Select at least one species before exporting.');return}
-  const rows=[['Species','Mean','Peak','Peak time','Delta','Trapezoidal integral']];names.forEach(n=>{let s=getStat(n);if(s)rows.push([n,s.mean,s.peak,s.peakAt,s.delta,s.integral])});
-  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_statistics.csv','text/csv;charset=utf-8');toast('Statistics exported.')}
+ function exportSeries(){
+  const names=currentNames();if(!names.length){toast('Select a chemical before exporting.');return}
+  const sources=viewMode==='published'?activePublishedScenarios().map(s=>({title:s.title,src:parsedScenarioCache.get(s.id)})):[{title:'Uploaded CSV',src:dataset}];
+  const lo=dataset.data[start][dataset.timeKey],hi=dataset.data[end][dataset.timeKey];
+  const rows=[['Scenario',dataset.timeKey,...names]];
+  for(const s of sources)for(const row of s.src.data){
+   const t=row[s.src.timeKey];if(t<lo||t>hi)continue;
+   rows.push([s.title,t,...names.map(n=>row[n]??'')]);
+  }
+  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_selected_series.csv','text/csv;charset=utf-8');
+  toast('Selected series exported.');
+ }
+ function exportStats(){
+  const rows=[['Species','Scenario','Mean','Delta mean vs first scenario','Peak','Peak at','Change (final-initial)','Trapezoidal integral']];
+  for(const s of statRows())rows.push([s.name,s.scenario,s.mean,s.diff,s.peak,s.peakAt,s.delta,s.integral]);
+  saveText('\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),'box_model_statistics.csv','text/csv;charset=utf-8');
+  toast('Statistics exported.');
+ }
  function exportSVG(){const svg=$('chart').cloneNode(true);svg.querySelectorAll('rect[style*="cursor:crosshair"],g[pointer-events="none"]').forEach(n=>n.remove());svg.setAttribute('xmlns',svgNS);svg.setAttribute('width',Math.round($('chart-wrap').clientWidth));svg.setAttribute('height',$('chart').getBoundingClientRect().height);svg.insertAdjacentHTML('afterbegin','<style>text{font-family:Arial, sans-serif;font-size:11px;fill:#8b98ab}.gridline{stroke:#edf1f6;stroke-width:1}.axisline{stroke:#d9e1ea;stroke-width:1}.axis-title{font-size:10px;fill:#7a8799}.line{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5}</style>');saveText(new XMLSerializer().serializeToString(svg),'box_model_graph.svg','image/svg+xml;charset=utf-8');toast('SVG graph exported.')}
  $('species-list').addEventListener('change',e=>{let n=e.target.dataset.species;if(!n)return;if(e.target.checked)selected.add(n);else selected.delete(n);renderAll()});
  $('species-search').addEventListener('input',e=>{search=e.target.value;renderSpecies()});
