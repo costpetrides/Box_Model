@@ -43,7 +43,7 @@ button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.
 .scenario-select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .upload-panel{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:22px;padding:24px;margin-bottom:18px}
 .upload-panel[hidden]{display:none!important}
-.upload-panel h2{font-size:19px;margin:7px 0 5px}.upload-panel p{font-size:12px;line-height:1.7;max-width:540px;color:var(--muted);margin:0}
+.upload-panel h2{font-size:19px;margin:7px 0 5px}.upload-panel p{font-size:12px;line-height:1.7;max-width:620px;color:var(--muted);margin:0}.upload-panel p a{text-decoration:underline;color:var(--accent);text-underline-offset:2px}.upload-panel code{font-size:11px;color:#375571}
 .upload-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}.upload-actions span{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
 body.csv-mode:not(.csv-loaded) .plot-panel,body.csv-mode:not(.csv-loaded) .two-col,body.csv-mode:not(.csv-loaded) .side-species{display:none}
 body.csv-mode .data-section{display:none}
@@ -53,7 +53,7 @@ body:not(.csv-mode) .plot-toolbar>.legend{display:none}
 body:not(.csv-mode) .plot-toolbar .time-range-panel{flex:1 1 auto;min-width:300px}
 body:not(.csv-mode) .plot-toolbar .range-sliders{min-width:180px}
 @media(max-width:760px){body:not(.csv-mode) .plot-toolbar .time-range-panel{min-width:0}body:not(.csv-mode) .plot-toolbar .range-sliders{min-width:90px}}
-body:not(.csv-mode) .side-species .search{display:none}
+body:not(.csv-mode) .side-species .search{display:block}
 .scenario-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 10px}
 @media(min-width:1500px){.plot-svg{height:460px}}
 @media(max-width:1190px){.layout{grid-template-columns:232px minmax(0,1fr)}.content{padding:18px 10px 35px 0}.sidebar{padding:22px 10px}.two-col{grid-template-columns:1fr}}
@@ -118,15 +118,15 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
   <section class="data-section"><div class="scenario-actions"><button type="button" class="link-button" id="select-all-scenarios">Select all</button><button type="button" class="link-button" id="clear-all-scenarios">Clear all</button></div><div id="scenario-list" class="scenario-list" role="group" aria-label="Choose scenarios to compare"></div><span id="filename" hidden></span></section>
   <section class="side-species"><div class="label-row"><span class="eyebrow" style="margin:0">CHEMICAL SPECIES</span><span class="count" id="species-count">0 selected</span></div>
   <div class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="species-search" type="search" placeholder="Search chemicals..." aria-label="Search chemical species"></div>
-  <div class="species-actions"><button class="link-button" id="key-species">Select all five</button><button class="link-button" id="clear-species">Clear all</button></div>
+  <div class="species-actions"><button class="link-button" id="key-species">Default six</button><button class="link-button" id="clear-species">Clear all</button></div>
   <div class="species-list" id="species-list" aria-label="Select chemical series"></div></section>
   <div class="side-foot">A static, browser-only dashboard.<br>Suitable for <a href="https://github.com/costpetrides/Box_Model" target="_blank" rel="noopener noreferrer">GitHub Pages</a>.<br>No uploads leave your computer.</div>
 </aside>
 <main class="content">
   <header class="topbar" aria-label="Dashboard views"><div class="top-actions"><button type="button" class="btn primary" id="published-tab" aria-pressed="true">Scenarios</button><button type="button" class="btn" id="csv-tab" aria-pressed="false">Upload CSV</button></div><button type="button" class="btn" id="reset-btn" title="Reload the current dataset">↺ &nbsp;Reset</button></header>
   <section class="panel upload-panel" id="upload-workspace" hidden aria-label="CSV explorer">
-    <div><h2>Explore your own CSV</h2><p>Load a CSV from your computer to analyse it privately. This does not change or publish any of the site's scenarios.</p></div>
-    <div class="upload-actions"><label class="btn primary" for="csv-upload">Choose a CSV file</label><input id="csv-upload" class="file-input" type="file" accept=".csv,text/csv,text/plain"><span id="upload-filename" aria-live="polite">No local CSV loaded</span></div>
+    <div><h2>Explore your own CSV</h2><p>Upload a <strong>.csv</strong> file in the same layout as the Excel results: <code>Time,O3,NO,NO2,...</code>, with one time step per row and concentrations in ppm. You can also export an original Excel scenario sheet as CSV (species header in row 6); its ppb values are converted to ppm automatically. <a href="./data/Box_Model_Excel_CSV_template_ppm.csv" download>Download the 104-species CSV example</a>. Your file stays on your device.</p></div>
+    <div class="upload-actions"><label class="btn primary" for="csv-upload">Choose a CSV file</label><input id="csv-upload" class="file-input" type="file" accept=".csv,text/csv"><span id="upload-filename" aria-live="polite">No local CSV loaded</span></div>
   </section>
     <section class="panel plot-panel">
     <div class="plot-toolbar" aria-label="Chart controls">
@@ -180,17 +180,17 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
  // Published chemical species have been converted from the Excel ppb values to ppm.
  async function loadWorkbookData(){
   if(!workbookPromise)workbookPromise=(async()=>{
-   const response=await fetch('./data/odyseas_scenarios_ppm.gz.b64');
+   const response=await fetch('./data/odyseas_scenarios_all_ppm.gz.b64');
    if(!response.ok)throw Error('Could not load published Excel results (HTTP '+response.status+').');
    if(typeof DecompressionStream!=='function')throw Error('Your browser needs an update to read the published scenario data.');
    const encoded=(await response.text()).trim();
    const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
    const workbook=JSON.parse(await new Response(stream).text());
-   if(workbook.columns.join(',')!=='Time,O3,NO,NO2,CO,OH,ALK4')throw Error('Unexpected scenario dataset.');
+   if(workbook.columns[0]!=='Time'||workbook.columns.length!==105)throw Error('Unexpected scenario dataset.');
    for(const entry of publishedScenarios){
     const rows=workbook.scenarios[entry.id];
-    if(!rows||rows.length!==19||rows.some(r=>r.length!==7))throw Error('Invalid data for '+entry.title);
+    if(!rows||rows.length!==19||rows.some(r=>r.length!==workbook.columns.length))throw Error('Invalid data for '+entry.title);
     scenarioCache.set(entry.id,workbook.columns.join(';')+'\n'+rows.map(r=>r.join(';')).join('\n'));
    }
   })();
@@ -252,13 +252,14 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
   paintMode();
  }
  async function openLocalCSV(file){
+  if(!file.name.toLowerCase().endsWith('.csv'))throw Error('Please export the Excel scenario sheet as a .csv file first.');
   const text=await file.text();
   const parsed=parseDelimited(text); // Validate before replacing any view.
   if(!parsed.data.length)throw Error('This CSV does not contain time series data.');
   ++scenarioRequest;
+  viewMode='csv';
   init(text,file.name);
   localCSV={filename:file.name,content:text};
-  viewMode='csv';
   $('upload-filename').textContent=file.name+' · local only';
   paintMode();
   toast('Local CSV loaded: '+file.name);
@@ -295,7 +296,11 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
   }
   row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row);
   if(rows.length<2)throw Error('The CSV needs a header and at least one data row.');
-  const headers=rows[0].map((s,i)=>s.trim()||`Column ${i+1}`);
+  // A clean CSV already contains ppm values; exporting a whole Excel sheet retains metadata and ppb values.
+  const headerRow=rows.findIndex(r=>r.some(v=>/^Time\s*$/i.test(String(v).trim()))&&r.filter(v=>String(v).trim()).length>=2);
+  if(headerRow<0||headerRow>10)throw Error('Expected a Time header with chemical columns (Excel row 6 is supported).');
+  const ppmFactor=headerRow>0?0.001:1;
+  const headers=rows[headerRow].map((s,i)=>s.trim()||`Column ${i+1}`);
   if(new Set(headers).size!==headers.length)throw Error('Duplicate column names found in the CSV.');
   const timeCol=headers.findIndex(h=>/^time(\s|$|\(|\[)/i.test(h));const xi=timeCol>=0?timeCol:0;
   function number(v){let s=String(v??'').trim().replace(/\s/g,'');if(!s)return NaN;
@@ -303,7 +308,7 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
    else if(s.includes(','))s=s.replace(',','.');
    const n=Number(s);return Number.isFinite(n)?n:NaN;
   }
-  const data=rows.slice(1).filter(r=>r.some(c=>c.trim()!=='')).map(r=>{const obj={};headers.forEach((h,j)=>obj[h]=number(r[j]));return obj}).filter(r=>Number.isFinite(r[headers[xi]])).sort((a,b)=>a[headers[xi]]-b[headers[xi]]);
+  const data=rows.slice(headerRow+1).filter(r=>r.some(c=>c.trim()!=='')).map(r=>{const obj={};headers.forEach((h,j)=>{const value=number(r[j]);obj[h]=j===xi?value:value*ppmFactor;});return obj}).filter(r=>Number.isFinite(r[headers[xi]])).sort((a,b)=>a[headers[xi]]-b[headers[xi]]);
   if(data.length<2)throw Error('At least two rows with valid numerical time values are required.');
   const names=headers.filter((h,i)=>i!==xi && data.some(r=>Number.isFinite(r[h])));
   if(!names.length)throw Error('No numerical chemical columns were found.');
@@ -316,7 +321,7 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
  function timeLabel(v){if(clockMode){let h=Math.floor(v/60),m=Math.round(v%60);if(m===60){h++;m=0}return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}return niceNum(v)}
  function timeAt(i){return timeLabel(dataset.data[i][dataset.timeKey])}
  function currentNames(){
-  const active=[...selected].filter(name=>(dataset.names.includes(name)&&(viewMode!=='published'||coreChemicals.includes(name)))||!!getSeries(name));
+  const active=[...selected].filter(name=>dataset.names.includes(name)||!!getSeries(name));
   return viewMode==='published'
    ?[...coreChemicals.filter(name=>active.includes(name)),...active.filter(name=>!coreChemicals.includes(name))]
    :active;
@@ -333,8 +338,8 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
   dataset=parsed;clockMode=dataset.clock;derived=[];
   start=0;end=dataset.data.length-1;mode=old?old.mode:'linear';
   colorRegistry=new Map();nextColour=0;search=old?old.search:'';
-  // The published dashboard only exposes five chosen species; uploaded CSVs remain unrestricted.
-  const available=viewMode==='published'?coreChemicals:parsed.names;
+  // All published species are available, but only the existing six are preselected.
+  const available=parsed.names;
   selected=new Set(old?old.names.filter(n=>available.includes(n)):coreChemicals.filter(n=>parsed.names.includes(n)));
   if(!old&&selected.size===0)selected=new Set(parsed.names.slice(0,Math.min(3,parsed.names.length)));
   if(old){
@@ -361,9 +366,9 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
  function renderAll(){renderSpecies();renderPlotMeta();renderLegend();renderChart()}
  function renderSpecies(){
   $('species-count').textContent=selected.size+' selected';
-  const available=viewMode==='published'?coreChemicals.filter(n=>dataset.names.includes(n)):dataset.names;
+  const available=dataset.names;
   $('species-search').placeholder=`Search ${available.length} chemicals...`;
-  const names=[...available,...derived.map(s=>s.name)].filter(n=>viewMode==='published'||n.toLowerCase().includes(search.toLowerCase()));
+  const names=[...available,...derived.map(s=>s.name)].filter(n=>n.toLowerCase().includes(search.toLowerCase()));
   $('species-list').innerHTML=names.map(name=>`<label class="species-item" title="${escapeHTML(name)}"><input type="checkbox" data-species="${escapeHTML(name)}" ${selected.has(name)?'checked':''}><span class="species-dot" style="--dot:${selected.has(name)?colour(name):'#dce4ec'}"></span><span class="species-name">${escapeHTML(name)}</span>${getSeries(name)?'<span class="mini">ƒ</span>':''}</label>`).join('') || `<div class="empty" style="padding:18px">No matching chemicals</div>`;
  }
  function renderPlotMeta(){
@@ -596,7 +601,7 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
    const x=axis==='left'?m.l:m.l+pw;
    // In published linear plots, scale very small right-axis tick numbers by a shared 10^n factor.
    // Only the labels change; data coordinates and tick positions stay in original ppm.
-   const scientificPower=axis==='right'&&viewMode==='published'&&mode==='linear'?smallAxisExponent(a):null;
+   const scientificPower=axis==='right'&&mode==='linear'?smallAxisExponent(a):null;
    el(svg,'line',{x1:x,y1:m.t,x2:x,y2:m.t+ph,class:'axisline'});
    a.ticks.forEach(t=>{
     const y=yt(t,axis);
@@ -605,8 +610,8 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
    });
    const tx=axis==='left'?10:W-10,mid=m.t+ph/2,rot=axis==='left'?-90:90;
    const axisLabel=axis==='left'
-    ?'Concentration'+(mode==='normalised'?' (normalised)':viewMode==='published'?' (ppm)':' (CSV units)')+(mode==='log'?' · log':'')
-    :'OH / ALK4'+(mode==='normalised'?' (normalised)':viewMode==='published'?' (ppm)':' (CSV units)')+(mode==='log'?' · log':'');
+    ?'Concentration'+(mode==='normalised'?' (normalised)':' (ppm)')+(mode==='log'?' · log':'')
+    :'OH / ALK4'+(mode==='normalised'?' (normalised)':' (ppm)')+(mode==='log'?' · log':'');
    el(svg,'text',{x:tx,y:mid,transform:`rotate(${rot} ${tx} ${mid})`,'text-anchor':'middle',class:'axis-title'},axisLabel);
    if(scientificPower!==null){
     // Horizontal multiplier for the secondary axis: true SVG superscript, above the right-hand ticks.
@@ -734,7 +739,7 @@ body.csv-mode .csv-legend-slot .legend{display:flex;flex-wrap:wrap;justify-conte
  window.addEventListener('resize',()=>{if(fullscreenScenarioId)redrawFullscreen()});
  $('species-list').addEventListener('change',e=>{let n=e.target.dataset.species;if(!n)return;if(e.target.checked)selected.add(n);else selected.delete(n);renderAll()});
  $('species-search').addEventListener('input',e=>{search=e.target.value;renderSpecies()});
- $('key-species').addEventListener('click',()=>{coreChemicals.forEach(n=>{if(dataset.names.includes(n))selected.add(n)});renderAll()});
+ $('key-species').addEventListener('click',()=>{selected=new Set(coreChemicals.filter(n=>dataset.names.includes(n)));renderAll()});
  $('clear-species').addEventListener('click',()=>{selected.clear();renderAll()});
  $('legend').addEventListener('click',e=>{const x=e.target.closest('[data-remove]');if(x){selected.delete(x.dataset.remove);renderAll()}});
  document.querySelectorAll('[data-scale]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.scale;document.querySelectorAll('[data-scale]').forEach(x=>x.classList.toggle('active',x===b));renderPlotMeta();renderChart()}));
